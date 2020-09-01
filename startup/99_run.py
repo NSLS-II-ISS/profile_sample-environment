@@ -19,6 +19,7 @@ xsample_gui = xsample.XsampleGui(mfcs=mfcs_cart,
                                  rga_masses=rga_masses,
                                  temps = temps,
                                  temps_sp = temps_sp,
+                                 heater_enable1=heater_enable1,
                                  RE=RE,
                                  archiver = arch_iss)
 
