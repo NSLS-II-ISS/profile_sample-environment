@@ -1,12 +1,15 @@
 
 from PyQt5.QtWidgets import QApplication
 import sys
-from isstools import xsample
+from iss_xsample import xsample
 
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
+
+import matplotlib
+matplotlib.use('Qt5Agg')
 
 
 
@@ -22,8 +25,8 @@ xsample_gui = xsample.XsampleGui(mfcs=mfcs_cart,
                                  heater_enable1=heater_enable1,
                                  RE=RE,
                                  archiver = arch_iss)
-
-def xsample():
+#
+def xsample_show():
     xsample_gui.show()
 
-xsample()
+xsample_show()

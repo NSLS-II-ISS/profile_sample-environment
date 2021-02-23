@@ -19,12 +19,12 @@ from bluesky.utils import get_history
 RE = RunEngine({})
 
 
-from bluesky.utils import ts_msg_hook
+# from bluesky.utils import ts_msg_hook
+#
+# RE.msg_hook = ts_msg_hook
 
-RE.msg_hook = ts_msg_hook
 
-
-temp1 = EpicsSignal('XF:08IDB-CT{ES-TC}T2-I', name='temp1')
+# temp1 = EpicsSignal('XF:08IDB-CT{ES-TC}T2-I', name='temp1')
 
 
 
