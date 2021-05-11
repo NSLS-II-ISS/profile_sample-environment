@@ -1,5 +1,4 @@
 
-
 # temp1 = EpicsSignal('XF:08IDB-CT{ES-TC}T1-I', name='temp1')
 # temp2 = EpicsSignal('XF:08IDB-CT{ES-TC}T2-I', name='temp2')
 
@@ -10,6 +9,7 @@ import h5py
 import bluesky.plan_stubs as bps
 import numpy as np
 import time as ttime
+from ophyd import Component as Cpt, Device, EpicsSignal, Kind
 
 temp1 = EpicsSignal('XF:08IDB-CT{DIODE-Box_B2:5}InCh0:Data-I', name='temp1')
 temp2 = EpicsSignal('XF:08IDB-CT{DIODE-Box_B2:5}InCh1:Data-I', name='temp2')
@@ -18,30 +18,65 @@ temp2 = EpicsSignal('XF:08IDB-CT{DIODE-Box_B2:5}InCh1:Data-I', name='temp2')
 heater1_curr = EpicsSignal('XF:08IDB-CT{DIODE-Box_B2:3}OutCh0:Data-SP', name='curr_override')
 heater2_volt = EpicsSignal('XF:08IDB-CT{DIODE-Box_B1:11}OutCh0:Data-SP', name='volt_override')
 
-class Heater:
-
-    def __init__(self, temprb_pv, output_pv, output_max=3.5):
-        self.temprb_pv = temprb_pv
-        self.output_pv = output_pv
-        self.output_max = output_max
-
-    def set_pid(self, p, i, d):
-        t_init = self.temprb_pv.get()
-        self.pid = PID(p, i, d, setpoint=t_init)
-        self.pid.sample_time = 0.1
-        self.pid.output_limits = (0, self.output_max)
-
-    def update_setpoint(self, setpoint):
-        self.pid.setpoint = setpoint
 
 
-heater_cartridge = Heater(temp1, heater1_curr)
-heater_spiral = Heater(temp2, heater2_volt)
-heater_furnace = Heater(temp2, heater2_volt)
 
 
-heater_spiral.set_pid(p=0.01, i=0.00031622776601683794, d=0)
-heater_furnace.set_pid(p=0.01, i=0.00031622776601683794, d=0)
+class SamplePID(Device):
+    pv = Cpt(EpicsSignal, '.CVAL', name='temp')
+    pv_sp = Cpt(EpicsSignal, '.VAL', name='temp_sp')
+    enabled = Cpt(EpicsSignal, ':on')
+    KP = Cpt(EpicsSignal, '.KP')
+    KI = Cpt(EpicsSignal, '.KI')
+    KD = Cpt(EpicsSignal, '.KD')
+
+    def __init__(self, human_name, pv_name, pv_units, kp=0.05, ki=0.02, kd=0.00, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.human_name = human_name
+        self.pv_name = pv_name
+        self.pv_units = pv_units
+        self._check_pid_values(kp, ki, kd)
+
+    def enable(self):
+        self.enabled.put(1)
+
+    def disable(self):
+        self.enabled.put(0)
+
+    def _check_pid_values(self, kp, ki, kd):
+        if ((not np.isclose(self.KP.get(), kp, 1e-3)) or
+            (not np.isclose(self.KI.get(), ki, 1e-3)) or
+            (not np.isclose(self.KD.get(), kd, 1e-3))):
+            print(f'Warning: Sample PID loop for {self.human_name} was initialized with non-standard values !!!!')
+
+heater_spiral = SamplePID(human_name='Spiral Heater', pv_name='Temperature', pv_units='C deg', kp=0.05, ki=0.02, kd=0.00, prefix='XF:08IDB-CT{FbPid:01}PID', name='heater_spiral')
+
+dict_sample_envs = {'heater_spiral' : heater_spiral}
+
+
+
+#     def __init__(self, temprb_pv, output_pv, output_max=3.5):
+#         self.temprb_pv = temprb_pv
+#         self.output_pv = output_pv
+#         self.output_max = output_max
+#
+#     def set_pid(self, p, i, d):
+#         t_init = self.temprb_pv.get()
+#         self.pid = PID(p, i, d, setpoint=t_init)
+#         self.pid.sample_time = 0.1
+#         self.pid.output_limits = (0, self.output_max)
+#
+#     def update_setpoint(self, setpoint):
+#         self.pid.setpoint = setpoint
+#
+#
+# heater_cartridge = Heater(temp1, heater1_curr)
+# heater_spiral = Heater(temp2, heater2_volt)
+# heater_furnace = Heater(temp2, heater2_volt)
+
+
+# heater_spiral.set_pid(p=0.01, i=0.00031622776601683794, d=0)
+# heater_furnace.set_pid(p=0.01, i=0.00031622776601683794, d=0)
 
 
 def end_temperature_control_plan(heater : Heater):
@@ -100,7 +135,7 @@ def execute_temperature_control_plan(heater, times, temps, end_program_flag=Fals
             warmedup = True
         heater.update_setpoint(temp_setpoint)
         yield from update_output_plan(heater, warmedup)
-        if t_print>0.1:
+        if t_prin t >0.1:
             print(temp_setpoint)
             t_print = ttime.time()
 
@@ -120,8 +155,8 @@ def execute_temperature_control_plan(heater, times, temps, end_program_flag=Fals
 
 def test_pid_values_plan(p_range, i_range, npt, heater):
     hf = h5py.File(r'/nsls2/xf08id/Sandbox/pid_temp_data/2020_12_29_data_high_temp.h5', 'w')
-    p_grid = 10**np.linspace(np.log10(p_range[0]), np.log10(p_range[1]), npt)
-    i_grid = 10**np.linspace(np.log10(i_range[0]), np.log10(i_range[1]), npt)
+    p_grid = 1 0* *np.linspace(np.log10(p_range[0]), np.log10(p_range[1]), npt)
+    i_grid = 1 0* *np.linspace(np.log10(i_range[0]), np.log10(i_range[1]), npt)
     n = p_grid.size * i_grid.size
     idx = 1
     for _p in p_grid:
