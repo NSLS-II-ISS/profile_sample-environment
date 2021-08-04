@@ -21,7 +21,11 @@ for pv in temps:
 heater1_curr = EpicsSignal('XF:08IDB-CT{DIODE-Box_B2:3}OutCh0:Data-SP', name='curr_override')
 heater2_volt = EpicsSignal('XF:08IDB-CT{DIODE-Box_B1:11}OutCh0:Data-SP', name='volt_override')
 
-
+try:
+    ramper = EpicsSignal('XF:08IDB-Ramping:A', name='bla')
+except:
+    print('ramper PV is not initialized')
+    ramper = None
 
 
 
@@ -33,12 +37,29 @@ class SamplePID(Device):
     KI = Cpt(EpicsSignal, '.KI')
     KD = Cpt(EpicsSignal, '.KD')
 
-    def __init__(self, human_name, pv_name, pv_units, kp=0.05, ki=0.02, kd=0.00, *args, **kwargs):
+    def __init__(self, human_name, pv_name, pv_units, kp=0.05, ki=0.02, kd=0.00, ramper=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.human_name = human_name
         self.pv_name = pv_name
         self.pv_units = pv_units
+        self.ramper = ramper
+        self._subscribe_to_ramper()
         self._check_pid_values(kp, ki, kd)
+
+    def _subscribe_to_ramper(self):
+        if self.ramper is not None:
+
+            def subscription(*args, **kwargs):
+                setpoint = self.ramper.get()
+                self.pv_sp.put(setpoint)
+                return
+
+            self.ramper.subscribe(subscription)
+
+    # def _ramper_subscriber(self, *args, **kwargs):
+    #     setpoint = self.ramper.get()
+    #     self.pv_sp.put(setpoint)
+    #     return
 
     def enable(self):
         self.enabled.put(1)
@@ -72,7 +93,10 @@ class SamplePID(Device):
                 print(temp_setpoint)
                 t_print = ttime.time()
 
-heater_spiral = SamplePID(human_name='Spiral Heater', pv_name='Temperature', pv_units='C deg', kp=0.05, ki=0.02, kd=0.00, prefix='XF:08IDB-CT{FbPid:01}PID', name='heater_spiral')
+heater_spiral = SamplePID(human_name='Spiral Heater', pv_name='Temperature', pv_units='C deg',
+                          kp=0.05, ki=0.02, kd=0.00,
+                          ramper=ramper,
+                          prefix='XF:08IDB-CT{FbPid:01}PID', name='heater_spiral')
 
 dict_sample_envs = {'heater_spiral' : heater_spiral}
 
