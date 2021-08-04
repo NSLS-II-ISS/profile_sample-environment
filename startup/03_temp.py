@@ -13,7 +13,10 @@ from ophyd import Component as Cpt, Device, EpicsSignal, Kind
 
 temp1 = EpicsSignal('XF:08IDB-CT{DIODE-Box_B2:5}InCh0:Data-I', name='temp1')
 temp2 = EpicsSignal('XF:08IDB-CT{DIODE-Box_B2:5}InCh1:Data-I', name='temp2')
+temps = [temp1, temp2]
 
+for pv in temps:
+    arch_iss.pvs.update({pv.name: pv.pvname})
 
 heater1_curr = EpicsSignal('XF:08IDB-CT{DIODE-Box_B2:3}OutCh0:Data-SP', name='curr_override')
 heater2_volt = EpicsSignal('XF:08IDB-CT{DIODE-Box_B1:11}OutCh0:Data-SP', name='volt_override')
@@ -49,6 +52,26 @@ class SamplePID(Device):
             (not np.isclose(self.KD.get(), kd, 1e-3))):
             print(f'Warning: Sample PID loop for {self.human_name} was initialized with non-standard values !!!!')
 
+    def update_setpoint(self, value):
+        self.pv_sp.put(value)
+
+    def ramp(self, times_list, temps_list, end_program_flag=False):
+        time_start = ttime.time()
+        t_print = ttime.time()
+        self.enable()
+        while True:
+            ttime.sleep(0.05)
+            dt = ttime.time() - time_start
+
+            if dt < np.max(times_list):
+                temp_setpoint = np.interp(dt, times_list, temps_list)
+            else:
+                temp_setpoint = temps_list[-1]
+            self.update_setpoint(temp_setpoint)
+            if t_print > 0.5:
+                print(temp_setpoint)
+                t_print = ttime.time()
+
 heater_spiral = SamplePID(human_name='Spiral Heater', pv_name='Temperature', pv_units='C deg', kp=0.05, ki=0.02, kd=0.00, prefix='XF:08IDB-CT{FbPid:01}PID', name='heater_spiral')
 
 dict_sample_envs = {'heater_spiral' : heater_spiral}
@@ -79,8 +102,8 @@ dict_sample_envs = {'heater_spiral' : heater_spiral}
 # heater_furnace.set_pid(p=0.01, i=0.00031622776601683794, d=0)
 
 
-def end_temperature_control_plan(heater : Heater):
-    yield from bps.mv(heater.output_pv, 0)
+# def end_temperature_control_plan(heater : Heater):
+#     yield from bps.mv(heater.output_pv, 0)
 
 
 def update_output_plan(heater, warmedup=True):
@@ -135,7 +158,7 @@ def execute_temperature_control_plan(heater, times, temps, end_program_flag=Fals
             warmedup = True
         heater.update_setpoint(temp_setpoint)
         yield from update_output_plan(heater, warmedup)
-        if t_prin t >0.1:
+        if t_print >0.1:
             print(temp_setpoint)
             t_print = ttime.time()
 
@@ -153,39 +176,39 @@ def execute_temperature_control_plan(heater, times, temps, end_program_flag=Fals
 
 
 
-def test_pid_values_plan(p_range, i_range, npt, heater):
-    hf = h5py.File(r'/nsls2/xf08id/Sandbox/pid_temp_data/2020_12_29_data_high_temp.h5', 'w')
-    p_grid = 1 0* *np.linspace(np.log10(p_range[0]), np.log10(p_range[1]), npt)
-    i_grid = 1 0* *np.linspace(np.log10(i_range[0]), np.log10(i_range[1]), npt)
-    n = p_grid.size * i_grid.size
-    idx = 1
-    for _p in p_grid:
-        for _i in i_grid:
-            print(f'checking p={_p}, i={_i} | progress = {round(idx / n * 100)}')
-
-
-
-    p_grid = 10 ** np.linspace(-2.7, -1.9, 5)
-    i_grid = 10 ** np.linspace(-3.25, -3.75, 5)
-    n = p_grid.size * i_grid.size
-    idx = 1
-    for _p in p_grid:
-        for _i in i_grid:
-            print(f'checking p={_p}, i={_i} | progress = {round(idx / n * 100)}')
-            _t, _T, _V = pid_testing(max_time=exec_time, p=_p, i=_i, d=0, setpoint=setpoint, plotting=False)
-            R = np.sum(((_T[_t > 0.33 * exec_time] - setpoint) / setpoint) ** 2)
-
-            g = hf.create_group(str(idx))
-            g.create_dataset('t', data=_t)
-            g.create_dataset('T', data=_T)
-            g.create_dataset('V', data=_V)
-            g.create_dataset('P', data=_p)
-            g.create_dataset('I', data=_i)
-            g.create_dataset('R', data=R)
-            idx += 1
-            ttime.sleep(sleep_time)
-
-    hf.close()
+# def test_pid_values_plan(p_range, i_range, npt, heater):
+#     hf = h5py.File(r'/nsls2/xf08id/Sandbox/pid_temp_data/2020_12_29_data_high_temp.h5', 'w')
+#     p_grid = 10**np.linspace(np.log10(p_range[0]), np.log10(p_range[1]), npt)
+#     i_grid = 10**np.linspace(np.log10(i_range[0]), np.log10(i_range[1]), npt)
+#     n = p_grid.size * i_grid.size
+#     idx = 1
+#     for _p in p_grid:
+#         for _i in i_grid:
+#             print(f'checking p={_p}, i={_i} | progress = {round(idx / n * 100)}')
+#
+#
+#
+#     p_grid = 10 ** np.linspace(-2.7, -1.9, 5)
+#     i_grid = 10 ** np.linspace(-3.25, -3.75, 5)
+#     n = p_grid.size * i_grid.size
+#     idx = 1
+#     for _p in p_grid:
+#         for _i in i_grid:
+#             print(f'checking p={_p}, i={_i} | progress = {round(idx / n * 100)}')
+#             _t, _T, _V = pid_testing(max_time=exec_time, p=_p, i=_i, d=0, setpoint=setpoint, plotting=False)
+#             R = np.sum(((_T[_t > 0.33 * exec_time] - setpoint) / setpoint) ** 2)
+#
+#             g = hf.create_group(str(idx))
+#             g.create_dataset('t', data=_t)
+#             g.create_dataset('T', data=_T)
+#             g.create_dataset('V', data=_V)
+#             g.create_dataset('P', data=_p)
+#             g.create_dataset('I', data=_i)
+#             g.create_dataset('R', data=R)
+#             idx += 1
+#             ttime.sleep(sleep_time)
+#
+#     hf.close()
 
 #
 #

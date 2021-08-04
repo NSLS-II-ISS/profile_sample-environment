@@ -22,6 +22,7 @@ app = QApplication(sys.argv)
 xsample_gui = xsample.XsampleGui(mfcs=mfcs_cart,
                                  rga_channels=rga_channels,
                                  rga_masses=rga_masses,
+                                 temps=temps,
                                  ghs=ghs,
                                  RE=RE,
                                  archiver = arch_iss)
