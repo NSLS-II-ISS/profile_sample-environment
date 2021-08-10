@@ -35,6 +35,8 @@ class Ramper(Device):
     tprog = EpicsSignal('XF:08IDB-Ramping:tprog', name='tprog')
     pvprog = EpicsSignal('XF:08IDB-Ramping:pvprog', name='pvprog')
     dwell = EpicsSignal('XF:08IDB-Ramping:dwell', name='dwell')
+    safety_thresh = EpicsSignal('XF:08IDB-Ramping:dwell', name='safety_thresh')
+    pid_enable_pv = EpicsSignal('XF:08IDB-Ramping:pid_enable_pv_name', name='pid_enable_pv_name')
 
     def __init__(self, aux_pv_sp=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -68,6 +70,7 @@ class Ramper(Device):
 
 try:
     ramper = Ramper(aux_pv_sp=temp2_sp ,prefix='XF:08IDB-Ramping:', name='ramper')
+    ramper.go.get()
 except:
     print('ramper PV is not initialized')
     ramper = None
@@ -105,6 +108,7 @@ class SamplePID(Device):
                 return
 
             self.ramper.pv_sp.subscribe(subscription)
+            self.ramper.pid_enable_pv.put(self.enabled.pvname)
 
     def enable(self):
         self.enabled.put(1)

@@ -1,8 +1,10 @@
 from textwrap import dedent
 
+from caproto import ChannelType
 from caproto.server import PVGroup, ioc_arg_parser, pvproperty, run
 import time as ttime
 import numpy as np
+from ophyd import Component as Cpt, Device, EpicsSignal, Kind
 
 class RamperIOC(PVGroup):
     """
@@ -40,8 +42,32 @@ class RamperIOC(PVGroup):
     dwell = pvproperty(value=0.05,
                     doc="dwell time for the pv setpoint update")
 
+
+    safety_timer = pvproperty(
+        value=0.0,
+        doc='timer for stopping the program in case if ipython session dies'
+    )
+
+    safety_thresh = pvproperty(
+        value=30.0,
+        doc='time threshold for turning the heater off'
+    )
+
+    pid_enable_pv_name = pvproperty(
+        value='',
+        dtype=ChannelType.STRING,
+        doc='pv name for pid enable'
+    )
+
+
+    pv_test = pvproperty(
+        value=0,
+        doc='pv for output testing'
+    )
+
     time_start = None
     time_paused = 0
+    pid_enable = None
 
 
     @pv_sp.startup
@@ -68,6 +94,29 @@ class RamperIOC(PVGroup):
             else:
                 self.time_start = None
             await async_lib.sleep(self.dwell.value)
+
+
+    @pid_enable_pv_name.startup
+    async def pid_enable_pv_name(self, instance, async_lib):
+        while self.pid_enable_pv_name.value == '':
+            await async_lib.sleep(1)
+
+        self.pid_enable = EpicsSignal(self.pid_enable_pv_name.value, name='pid_enable')
+
+
+
+    @safety_timer.startup
+    async def safety_timer(self, instance, async_lib):
+        while self.safety_timer.value < self.safety_thresh.value:
+            safety_timer = self.safety_timer.value + 1
+            await instance.write(value=safety_timer)
+            await async_lib.sleep(1)
+
+        self.pid_enable.put(0)
+
+
+
+
 
 
     # def pause_program(self):
