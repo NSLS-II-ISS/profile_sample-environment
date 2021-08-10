@@ -13,19 +13,65 @@ from ophyd import Component as Cpt, Device, EpicsSignal, Kind
 
 temp1 = EpicsSignal('XF:08IDB-CT{DIODE-Box_B2:5}InCh0:Data-I', name='temp1')
 temp2 = EpicsSignal('XF:08IDB-CT{DIODE-Box_B2:5}InCh1:Data-I', name='temp2')
-temps = [temp1, temp2]
+
+
+temp1_sp = EpicsSignal('XF:08IDB-CT{DIODE-HTR:1}T-SP', name='temp1_sp')
+temp2_sp = EpicsSignal('XF:08IDB-CT{DIODE-HTR:2}T-SP', name='temp2_sp')
+temps = [temp1, temp1_sp, temp2, temp2_sp]
+
+
 
 for pv in temps:
     arch_iss.pvs.update({pv.name: pv.pvname})
 
-heater1_curr = EpicsSignal('XF:08IDB-CT{DIODE-Box_B2:3}OutCh0:Data-SP', name='curr_override')
-heater2_volt = EpicsSignal('XF:08IDB-CT{DIODE-Box_B1:11}OutCh0:Data-SP', name='volt_override')
+heater1_curr_output = EpicsSignal('XF:08IDB-CT{DIODE-Box_B2:3}OutCh0:Data-SP', name='curr_override')
+heater2_volt_output = EpicsSignal('XF:08IDB-CT{DIODE-Box_B1:11}OutCh0:Data-SP', name='volt_override')
+
+class Ramper(Device):
+    pv_sp = EpicsSignal('XF:08IDB-Ramping:pv_sp', name='pv_sp')
+    go = EpicsSignal('XF:08IDB-Ramping:go', name='go')
+    # pv_pause = EpicsSignal('XF:08IDB-Ramping:pause', name='pv_pause')
+
+    tprog = EpicsSignal('XF:08IDB-Ramping:tprog', name='tprog')
+    pvprog = EpicsSignal('XF:08IDB-Ramping:pvprog', name='pvprog')
+    dwell = EpicsSignal('XF:08IDB-Ramping:dwell', name='dwell')
+
+    def __init__(self, aux_pv_sp=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.aux_pv_sp = aux_pv_sp
+        self._subscribe_aux_pv_sp()
+
+    def _subscribe_aux_pv_sp(self):
+        if self.aux_pv_sp is not None:
+
+            def subscription(*args, **kwargs):
+                setpoint = self.pv_sp.get()
+                self.aux_pv_sp.put(setpoint)
+                return
+
+            self.pv_sp.subscribe(subscription)
+
+    def enable(self):
+        self.go.put(1)
+
+    # def pause(self):
+    #     self.pv_pause.put(1)
+    #
+    # def depause(self):
+    #     self.pv_pause.put(0)
+
+    def disable(self, pv_sp_value=25):
+        self.go.put(0)
+        if pv_sp_value is not None:
+            self.pv_sp.put(pv_sp_value)
+
 
 try:
-    ramper = EpicsSignal('XF:08IDB-Ramping:A', name='bla')
+    ramper = Ramper(aux_pv_sp=temp2_sp ,prefix='XF:08IDB-Ramping:', name='ramper')
 except:
     print('ramper PV is not initialized')
     ramper = None
+
 
 
 
@@ -37,11 +83,15 @@ class SamplePID(Device):
     KI = Cpt(EpicsSignal, '.KI')
     KD = Cpt(EpicsSignal, '.KD')
 
-    def __init__(self, human_name, pv_name, pv_units, kp=0.05, ki=0.02, kd=0.00, ramper=None, *args, **kwargs):
+    def __init__(self, human_name, pv_name, pv_units,
+                 kp=0.05, ki=0.02, kd=0.00,
+                 pv_output=None,
+                 ramper=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.human_name = human_name
         self.pv_name = pv_name
         self.pv_units = pv_units
+        self.pv_output = pv_output
         self.ramper = ramper
         self._subscribe_to_ramper()
         self._check_pid_values(kp, ki, kd)
@@ -50,22 +100,21 @@ class SamplePID(Device):
         if self.ramper is not None:
 
             def subscription(*args, **kwargs):
-                setpoint = self.ramper.get()
+                setpoint = self.ramper.pv_sp.get()
                 self.pv_sp.put(setpoint)
                 return
 
-            self.ramper.subscribe(subscription)
-
-    # def _ramper_subscriber(self, *args, **kwargs):
-    #     setpoint = self.ramper.get()
-    #     self.pv_sp.put(setpoint)
-    #     return
+            self.ramper.pv_sp.subscribe(subscription)
 
     def enable(self):
         self.enabled.put(1)
 
     def disable(self):
         self.enabled.put(0)
+        #  the disabling of PID loop does not always zero the voltage output, so we force it to be zero - Denis 08/05/2021
+        if self.pv_output is not None:
+            ttime.sleep(1.0)
+            self.pv_output.put(0)
 
     def _check_pid_values(self, kp, ki, kd):
         if ((not np.isclose(self.KP.get(), kp, 1e-3)) or
@@ -76,25 +125,43 @@ class SamplePID(Device):
     def update_setpoint(self, value):
         self.pv_sp.put(value)
 
-    def ramp(self, times_list, temps_list, end_program_flag=False):
-        time_start = ttime.time()
-        t_print = ttime.time()
+    def ramp_start(self, times_list, pv_sp_list):
+        self.ramper.disable(pv_sp_value=None)
+        self.ramper.tprog.put(times_list)
+        self.ramper.pvprog.put(pv_sp_list)
         self.enable()
-        while True:
-            ttime.sleep(0.05)
-            dt = ttime.time() - time_start
+        self.ramper.enable()
 
-            if dt < np.max(times_list):
-                temp_setpoint = np.interp(dt, times_list, temps_list)
-            else:
-                temp_setpoint = temps_list[-1]
-            self.update_setpoint(temp_setpoint)
-            if t_print > 0.5:
-                print(temp_setpoint)
-                t_print = ttime.time()
+    # def ramp_pause(self):
+    #     self.ramper.pause()
+    #
+    # def ramp_continue(self):
+    #     self.ramper.depause()
+
+    def ramp_stop(self):
+        self.disable()
+        self.ramper.disable()
+
+
+        # time_start = ttime.time()
+        # t_print = ttime.time()
+        # self.enable()
+        # while True:
+        #     ttime.sleep(0.05)
+        #     dt = ttime.time() - time_start
+        #
+        #     if dt < np.max(times_list):
+        #         temp_setpoint = np.interp(dt, times_list, temps_list)
+        #     else:
+        #         temp_setpoint = temps_list[-1]
+        #     self.update_setpoint(temp_setpoint)
+        #     if t_print > 0.5:
+        #         print(temp_setpoint)
+        #         t_print = ttime.time()
 
 heater_spiral = SamplePID(human_name='Spiral Heater', pv_name='Temperature', pv_units='C deg',
                           kp=0.05, ki=0.02, kd=0.00,
+                          pv_output=heater2_volt_output,
                           ramper=ramper,
                           prefix='XF:08IDB-CT{FbPid:01}PID', name='heater_spiral')
 
