@@ -1,6 +1,7 @@
 from textwrap import dedent
 
 from caproto import ChannelType
+from caproto._dbr import _LongStringChannelType
 from caproto.server import PVGroup, ioc_arg_parser, pvproperty, run
 import time as ttime
 import numpy as np
@@ -39,8 +40,10 @@ class RamperIOC(PVGroup):
         max_length=100
     )
 
-    dwell = pvproperty(value=0.05,
-                    doc="dwell time for the pv setpoint update")
+    dwell = pvproperty(
+        value=0.05,
+        doc="dwell time for the pv setpoint update"
+        )
 
 
     safety_timer = pvproperty(
@@ -53,12 +56,25 @@ class RamperIOC(PVGroup):
         doc='time threshold for turning the heater off'
     )
 
-    pid_enable_pv_name = pvproperty(
+    pid_enable_name = pvproperty(
         value='',
         dtype=ChannelType.STRING,
         doc='pv name for pid enable'
     )
 
+    pid_output_name = pvproperty(
+        value='',
+        dtype=ChannelType.STRING,
+        # dtype=_LongStringChannelType.LONG_STRING,
+        doc='pv name for pid output'
+    )
+
+    pid_output_name_ext = pvproperty(
+        value='',
+        dtype=ChannelType.STRING,
+        # dtype=_LongStringChannelType.LONG_STRING,
+        doc='pv name for pid output (extension)'
+    )
 
     pv_test = pvproperty(
         value=0,
@@ -68,6 +84,7 @@ class RamperIOC(PVGroup):
     time_start = None
     time_paused = 0
     pid_enable = None
+    pid_output = None
 
 
     @pv_sp.startup
@@ -81,7 +98,7 @@ class RamperIOC(PVGroup):
                 if self.time_start is None:
                     self.time_start = ttime.time()
 
-                self.pause_program() # pauses the program if needed
+                # self.pause_program() # pauses the program if needed
                 dt = ttime.time() - self.time_start - self.time_paused
 
                 if dt < np.max(self.tprog.value):
@@ -96,12 +113,29 @@ class RamperIOC(PVGroup):
             await async_lib.sleep(self.dwell.value)
 
 
-    @pid_enable_pv_name.startup
-    async def pid_enable_pv_name(self, instance, async_lib):
-        while self.pid_enable_pv_name.value == '':
+    @pid_enable_name.startup
+    async def pid_enable_name(self, instance, async_lib):
+        while self.pid_enable_name.value == '':
             await async_lib.sleep(1)
 
-        self.pid_enable = EpicsSignal(self.pid_enable_pv_name.value, name='pid_enable')
+        self.pid_enable = EpicsSignal(self.pid_enable_name.value, name='pid_enable')
+        def subscription(value, **kwargs):
+            if value == 0:
+                if self.pid_output is not None:
+                    self.pid_output.put(0)
+
+        self.pid_enable.subscribe(subscription)
+
+
+    @pid_output_name.startup
+    async def pid_output_name(self, instance, async_lib):
+        while (self.pid_output_name.value == ''):
+            await async_lib.sleep(1)
+
+        await async_lib.sleep(0.2)
+        pid_output_name = self.pid_output_name.value + self.pid_output_name_ext.value
+        self.pid_output = EpicsSignal(pid_output_name, name='pid_output')
+
 
 
 
@@ -111,8 +145,8 @@ class RamperIOC(PVGroup):
             safety_timer = self.safety_timer.value + 1
             await instance.write(value=safety_timer)
             await async_lib.sleep(1)
-
-        self.pid_enable.put(0)
+        if self.pid_enable is not None:
+            self.pid_enable.put(0)
 
 
 

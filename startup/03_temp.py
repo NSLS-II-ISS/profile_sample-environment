@@ -11,6 +11,7 @@ import numpy as np
 import time as ttime
 from ophyd import Component as Cpt, Device, EpicsSignal, Kind
 
+
 temp1 = EpicsSignal('XF:08IDB-CT{DIODE-Box_B2:5}InCh0:Data-I', name='temp1')
 temp2 = EpicsSignal('XF:08IDB-CT{DIODE-Box_B2:5}InCh1:Data-I', name='temp2')
 
@@ -28,30 +29,43 @@ heater1_curr_output = EpicsSignal('XF:08IDB-CT{DIODE-Box_B2:3}OutCh0:Data-SP', n
 heater2_volt_output = EpicsSignal('XF:08IDB-CT{DIODE-Box_B1:11}OutCh0:Data-SP', name='volt_override')
 
 class Ramper(Device):
-    pv_sp = EpicsSignal('XF:08IDB-Ramping:pv_sp', name='pv_sp')
-    go = EpicsSignal('XF:08IDB-Ramping:go', name='go')
+    pv_sp = Cpt(EpicsSignal, 'pv_sp', name='pv_sp')
+    go = Cpt(EpicsSignal, 'go', name='go')
     # pv_pause = EpicsSignal('XF:08IDB-Ramping:pause', name='pv_pause')
 
-    tprog = EpicsSignal('XF:08IDB-Ramping:tprog', name='tprog')
-    pvprog = EpicsSignal('XF:08IDB-Ramping:pvprog', name='pvprog')
-    dwell = EpicsSignal('XF:08IDB-Ramping:dwell', name='dwell')
-    safety_thresh = EpicsSignal('XF:08IDB-Ramping:dwell', name='safety_thresh')
-    pid_enable_pv = EpicsSignal('XF:08IDB-Ramping:pid_enable_pv_name', name='pid_enable_pv_name')
+    tprog = Cpt(EpicsSignal, 'tprog', name='tprog')
+    pvprog = Cpt(EpicsSignal, 'pvprog', name='pvprog')
+    dwell = Cpt(EpicsSignal, 'dwell', name='dwell')
+    safety_thresh = Cpt(EpicsSignal, 'safety_thresh', name='safety_thresh')
+    safety_timer = Cpt(EpicsSignal, 'safety_timer', name='safety_timer')
+    pid_enable_name = Cpt(EpicsSignal, 'pid_enable_name', name='pid_enable_name')
+    pid_output_name = Cpt(EpicsSignal, 'pid_output_name', name='pid_output_name')
+    pid_output_name_ext = Cpt(EpicsSignal, 'pid_output_name_ext', name='pid_output_name_ext')
 
     def __init__(self, aux_pv_sp=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.aux_pv_sp = aux_pv_sp
         self._subscribe_aux_pv_sp()
+        self.subscribe_safety_timer_upd()
 
     def _subscribe_aux_pv_sp(self):
         if self.aux_pv_sp is not None:
 
-            def subscription(*args, **kwargs):
-                setpoint = self.pv_sp.get()
+            def subscription(value, **kwargs):
+                setpoint = value
                 self.aux_pv_sp.put(setpoint)
                 return
 
             self.pv_sp.subscribe(subscription)
+
+    def subscribe_safety_timer_upd(self):
+        def subscription(value, **kwargs):
+            # current_time = self.safety_timer.get()
+            if value>5:
+                self.safety_timer.put(0)
+
+        self.safety_timer.subscribe(subscription)
+
 
     def enable(self):
         self.go.put(1)
@@ -70,7 +84,7 @@ class Ramper(Device):
 
 try:
     ramper = Ramper(aux_pv_sp=temp2_sp ,prefix='XF:08IDB-Ramping:', name='ramper')
-    ramper.go.get()
+    ramper.go.get() # to see if it is accessible
 except:
     print('ramper PV is not initialized')
     ramper = None
@@ -79,8 +93,8 @@ except:
 
 
 class SamplePID(Device):
-    pv = Cpt(EpicsSignal, '.CVAL', name='temp')
-    pv_sp = Cpt(EpicsSignal, '.VAL', name='temp_sp')
+    pv = Cpt(EpicsSignal, '.CVAL', name='pv')
+    pv_sp = Cpt(EpicsSignal, '.VAL', name='pv_sp')
     enabled = Cpt(EpicsSignal, ':on')
     KP = Cpt(EpicsSignal, '.KP')
     KI = Cpt(EpicsSignal, '.KI')
@@ -102,13 +116,15 @@ class SamplePID(Device):
     def _subscribe_to_ramper(self):
         if self.ramper is not None:
 
-            def subscription(*args, **kwargs):
-                setpoint = self.ramper.pv_sp.get()
+            def subscription(value, **kwargs):
+                setpoint = value
                 self.pv_sp.put(setpoint)
                 return
 
             self.ramper.pv_sp.subscribe(subscription)
-            self.ramper.pid_enable_pv.put(self.enabled.pvname)
+            self.ramper.pid_enable_name.put(self.enabled.pvname)
+            self.ramper.pid_output_name.put(self.pv_output.pvname[:40])
+            self.ramper.pid_output_name_ext.put(self.pv_output.pvname[40:])
 
     def enable(self):
         self.enabled.put(1)

@@ -27,8 +27,8 @@ arch_iss  = db_archiver.event_sources_by_name['arch_iss']
 # args = shlex.split('python /home/xf08id/.ipython/profile_sample-environment/iocs/ioc_ramping.py')
 # args = shlex.split('conda activate collection-2021-1.2; gnome-terminal -e "python /home/xf08id/.ipython/profile_sample-environment/iocs/ioc_ramping.py"')
 # args = shlex.split('"python /home/xf08id/.ipython/profile_sample-environment/iocs/ioc_ramping.py"')
-# args = shlex.split('gnome-terminal -e "conda activate collection-2021-1.2; python /home/xf08id/.ipython/profile_sample-environment/iocs/ioc_ramping.py"')
-# p = subprocess.Popen(args)
+args = shlex.split('gnome-terminal -- python /home/xf08id/.ipython/profile_sample-environment/iocs/ioc_ramping.py')
+p = subprocess.Popen(args)
 
 
 if bluesky.__version__ < LooseVersion('1.6'):
