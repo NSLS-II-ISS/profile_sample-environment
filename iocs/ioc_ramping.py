@@ -22,11 +22,20 @@ class RamperIOC(PVGroup):
         doc='flag indicating whether ramping is actually taking place'
     )
 
-    # pause = pvproperty(
-    #     value=0,
-    #     doc='flag indicating whether ramping is paused'
-    # )
+    time_elapsed = pvproperty(
+        value=0.0,
+        doc='timer for measuring the elapsed time since the beginning of the program'
+    )
 
+    pause = pvproperty(
+        value=0,
+        doc='flag indicating whether ramping is paused'
+    )
+
+    time_paused = pvproperty(
+        value=0.0,
+        doc='timer for measuring the paused time'
+    )
 
     tprog = pvproperty(
         value=[0.0, 60.0],
@@ -52,7 +61,7 @@ class RamperIOC(PVGroup):
     )
 
     safety_thresh = pvproperty(
-        value=30.0,
+        value=10.0,
         doc='time threshold for turning the heater off'
     )
 
@@ -69,12 +78,12 @@ class RamperIOC(PVGroup):
         doc='pv name for pid output'
     )
 
-    pid_output_name_ext = pvproperty(
-        value='',
-        dtype=ChannelType.STRING,
-        # dtype=_LongStringChannelType.LONG_STRING,
-        doc='pv name for pid output (extension)'
-    )
+    # pid_output_name_ext = pvproperty(
+    #     value='',
+    #     dtype=ChannelType.STRING,
+    #     # dtype=_LongStringChannelType.LONG_STRING,
+    #     doc='pv name for pid output (extension)'
+    # )
 
     pv_test = pvproperty(
         value=0,
@@ -82,7 +91,6 @@ class RamperIOC(PVGroup):
     )
 
     time_start = None
-    time_paused = 0
     pid_enable = None
     pid_output = None
 
@@ -92,24 +100,25 @@ class RamperIOC(PVGroup):
         """This is a startup hook which periodically updates the value."""
         while True:
             if self.go.value == 1:
-                # step_start_time = ttime.time()
-
-                # if self.pause.value == 0:
                 if self.time_start is None:
                     self.time_start = ttime.time()
 
-                # self.pause_program() # pauses the program if needed
-                dt = ttime.time() - self.time_start - self.time_paused
+                if self.pause.value == 0:
 
-                if dt < np.max(self.tprog.value):
-                    pv_sp = np.interp(dt, self.tprog.value, self.pvprog.value)
-                else:
-                    pv_sp = self.pvprog.value[-1]
-                await instance.write(value=pv_sp)
-                # else:
-                #     self.time_paused += (ttime.time - step_start_time)
+                    await self.time_elapsed.write(ttime.time() - self.time_start)
+                    dt = self.time_elapsed.value - self.time_paused.value
+
+                    if dt < np.max(self.tprog.value):
+                        pv_sp = np.interp(dt, self.tprog.value, self.pvprog.value)
+                    else:
+                        pv_sp = self.pvprog.value[-1]
+                    await instance.write(value=pv_sp)
+
             else:
                 self.time_start = None
+                await self.time_elapsed.write(0.0)
+                await self.time_paused.write(0.0)
+
             await async_lib.sleep(self.dwell.value)
 
 
@@ -132,11 +141,7 @@ class RamperIOC(PVGroup):
         while (self.pid_output_name.value == ''):
             await async_lib.sleep(1)
 
-        await async_lib.sleep(0.2)
-        pid_output_name = self.pid_output_name.value + self.pid_output_name_ext.value
-        self.pid_output = EpicsSignal(pid_output_name, name='pid_output')
-
-
+        self.pid_output = EpicsSignal(self.pid_output_name.value, name='pid_output')
 
 
     @safety_timer.startup
@@ -149,18 +154,20 @@ class RamperIOC(PVGroup):
             self.pid_enable.put(0)
 
 
+    @time_paused.startup
+    async def time_paused(self, instance, async_lib):
+        while True:
+            cur_time = ttime.time()
+            if self.pause.value == 1:
+                while True:
+                    if self.pause.value == 0:
+                        break
+                    await async_lib.sleep(self.dwell.value)
+                time_paused = self.time_paused.value + (ttime.time() - cur_time)
+                await instance.write(value=time_paused)
 
+            await async_lib.sleep(self.dwell.value)
 
-
-
-    # def pause_program(self):
-    #     cur_time = ttime.time()
-    #     if self.pause.value == 1:
-    #         while True:
-    #             if self.pause.value == 0:
-    #                 break
-    #             ttime.sleep(0.05)
-    #         self.time_paused += (ttime.time() - cur_time)
 
 
 

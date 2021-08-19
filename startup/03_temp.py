@@ -25,13 +25,13 @@ temps = [temp1, temp1_sp, temp2, temp2_sp]
 for pv in temps:
     arch_iss.pvs.update({pv.name: pv.pvname})
 
-heater1_curr_output = EpicsSignal('XF:08IDB-CT{DIODE-Box_B2:3}OutCh0:Data-SP', name='curr_override')
-heater2_volt_output = EpicsSignal('XF:08IDB-CT{DIODE-Box_B1:11}OutCh0:Data-SP', name='volt_override')
+heater1_curr_output = EpicsSignal('XF:08IDB-CT{DIODE-HTR:1}CURR:1-SP', name='curr_override')
+heater2_volt_output = EpicsSignal('XF:08IDB-CT{DIODE-HTR:2}VOLT:1-SP', name='volt_override')
 
 class Ramper(Device):
     pv_sp = Cpt(EpicsSignal, 'pv_sp', name='pv_sp')
     go = Cpt(EpicsSignal, 'go', name='go')
-    # pv_pause = EpicsSignal('XF:08IDB-Ramping:pause', name='pv_pause')
+    pv_pause = EpicsSignal('XF:08IDB-Ramping:pause', name='pv_pause')
 
     tprog = Cpt(EpicsSignal, 'tprog', name='tprog')
     pvprog = Cpt(EpicsSignal, 'pvprog', name='pvprog')
@@ -40,7 +40,7 @@ class Ramper(Device):
     safety_timer = Cpt(EpicsSignal, 'safety_timer', name='safety_timer')
     pid_enable_name = Cpt(EpicsSignal, 'pid_enable_name', name='pid_enable_name')
     pid_output_name = Cpt(EpicsSignal, 'pid_output_name', name='pid_output_name')
-    pid_output_name_ext = Cpt(EpicsSignal, 'pid_output_name_ext', name='pid_output_name_ext')
+    # pid_output_name_ext = Cpt(EpicsSignal, 'pid_output_name_ext', name='pid_output_name_ext')
 
     def __init__(self, aux_pv_sp=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -70,11 +70,11 @@ class Ramper(Device):
     def enable(self):
         self.go.put(1)
 
-    # def pause(self):
-    #     self.pv_pause.put(1)
-    #
-    # def depause(self):
-    #     self.pv_pause.put(0)
+    def pause(self):
+        self.pv_pause.put(1)
+
+    def depause(self):
+        self.pv_pause.put(0)
 
     def disable(self, pv_sp_value=25):
         self.go.put(0)
@@ -123,8 +123,7 @@ class SamplePID(Device):
 
             self.ramper.pv_sp.subscribe(subscription)
             self.ramper.pid_enable_name.put(self.enabled.pvname)
-            self.ramper.pid_output_name.put(self.pv_output.pvname[:40])
-            self.ramper.pid_output_name_ext.put(self.pv_output.pvname[40:])
+            self.ramper.pid_output_name.put(self.pv_output.pvname)
 
     def enable(self):
         self.enabled.put(1)
@@ -152,11 +151,11 @@ class SamplePID(Device):
         self.enable()
         self.ramper.enable()
 
-    # def ramp_pause(self):
-    #     self.ramper.pause()
-    #
-    # def ramp_continue(self):
-    #     self.ramper.depause()
+    def ramp_pause(self):
+        self.ramper.pause()
+
+    def ramp_continue(self):
+        self.ramper.depause()
 
     def ramp_stop(self):
         self.disable()
