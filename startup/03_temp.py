@@ -60,7 +60,6 @@ class Ramper(Device):
 
     def subscribe_safety_timer_upd(self):
         def subscription(value, **kwargs):
-            # current_time = self.safety_timer.get()
             if value>5:
                 self.safety_timer.put(0)
 
@@ -130,10 +129,6 @@ class SamplePID(Device):
 
     def disable(self):
         self.enabled.put(0)
-        #  the disabling of PID loop does not always zero the voltage output, so we force it to be zero - Denis 08/05/2021
-        if self.pv_output is not None:
-            ttime.sleep(1.0)
-            self.pv_output.put(0)
 
     def _check_pid_values(self, kp, ki, kd):
         if ((not np.isclose(self.KP.get(), kp, 1e-3)) or
@@ -162,21 +157,7 @@ class SamplePID(Device):
         self.ramper.disable()
 
 
-        # time_start = ttime.time()
-        # t_print = ttime.time()
-        # self.enable()
-        # while True:
-        #     ttime.sleep(0.05)
-        #     dt = ttime.time() - time_start
-        #
-        #     if dt < np.max(times_list):
-        #         temp_setpoint = np.interp(dt, times_list, temps_list)
-        #     else:
-        #         temp_setpoint = temps_list[-1]
-        #     self.update_setpoint(temp_setpoint)
-        #     if t_print > 0.5:
-        #         print(temp_setpoint)
-        #         t_print = ttime.time()
+
 
 heater_spiral = SamplePID(human_name='Spiral Heater', pv_name='Temperature', pv_units='C deg',
                           kp=0.05, ki=0.02, kd=0.00,
@@ -184,7 +165,7 @@ heater_spiral = SamplePID(human_name='Spiral Heater', pv_name='Temperature', pv_
                           ramper=ramper,
                           prefix='XF:08IDB-CT{FbPid:01}PID', name='heater_spiral')
 
-dict_sample_envs = {'heater_spiral' : heater_spiral}
+sample_envs_dict = {'Spiral Heater' : heater_spiral}
 
 
 

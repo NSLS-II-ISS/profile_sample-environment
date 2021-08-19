@@ -99,6 +99,7 @@ class RamperIOC(PVGroup):
     async def pv_sp(self, instance, async_lib):
         """This is a startup hook which periodically updates the value."""
         while True:
+            await async_lib.sleep(self.dwell.value)
             if self.go.value == 1:
                 if self.time_start is None:
                     self.time_start = ttime.time()
@@ -119,7 +120,6 @@ class RamperIOC(PVGroup):
                 await self.time_elapsed.write(0.0)
                 await self.time_paused.write(0.0)
 
-            await async_lib.sleep(self.dwell.value)
 
 
     @pid_enable_name.startup
@@ -131,8 +131,8 @@ class RamperIOC(PVGroup):
         def subscription(value, **kwargs):
             if value == 0:
                 if self.pid_output is not None:
-                    self.pid_output.put(0)
-
+                    if self.pid_output.get() != 0:
+                        self.pid_output.put(0)
         self.pid_enable.subscribe(subscription)
 
 
@@ -142,6 +142,12 @@ class RamperIOC(PVGroup):
             await async_lib.sleep(1)
 
         self.pid_output = EpicsSignal(self.pid_output_name.value, name='pid_output')
+        def subscription(value, **kwargs):
+            if value != 0:
+                if self.pid_enable is not None:
+                    if self.pid_enable.get() == 0:
+                        self.pid_output.put(0)
+        self.pid_output.subscribe(subscription)
 
 
     @safety_timer.startup
@@ -162,7 +168,7 @@ class RamperIOC(PVGroup):
                 while True:
                     if self.pause.value == 0:
                         break
-                    await async_lib.sleep(self.dwell.value)
+                    await async_lib.sleep(self.dwell.value/2)
                 time_paused = self.time_paused.value + (ttime.time() - cur_time)
                 await instance.write(value=time_paused)
 
