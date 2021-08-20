@@ -67,6 +67,7 @@ class Ramper(Device):
 
 
     def enable(self):
+        self.pv_pause.put(0)
         self.go.put(1)
 
     def pause(self):
@@ -77,6 +78,8 @@ class Ramper(Device):
 
     def disable(self, pv_sp_value=25):
         self.go.put(0)
+        self.pv_pause.put(0)
+        ttime.sleep(0.3)
         if pv_sp_value is not None:
             self.pv_sp.put(pv_sp_value)
 
@@ -102,12 +105,16 @@ class SamplePID(Device):
     def __init__(self, human_name, pv_name, pv_units,
                  kp=0.05, ki=0.02, kd=0.00,
                  pv_output=None,
+                 pv_output_name='',
+                 pv_output_units='',
                  ramper=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.human_name = human_name
         self.pv_name = pv_name
         self.pv_units = pv_units
         self.pv_output = pv_output
+        self.pv_output_name = pv_output_name
+        self.pv_output_units = pv_output_units
         self.ramper = ramper
         self._subscribe_to_ramper()
         self._check_pid_values(kp, ki, kd)
@@ -136,8 +143,8 @@ class SamplePID(Device):
             (not np.isclose(self.KD.get(), kd, 1e-3))):
             print(f'Warning: Sample PID loop for {self.human_name} was initialized with non-standard values !!!!')
 
-    def update_setpoint(self, value):
-        self.pv_sp.put(value)
+    def current_pv_reading(self, offset=5):
+        return (self.pv.get() - offset)
 
     def ramp_start(self, times_list, pv_sp_list):
         self.ramper.disable(pv_sp_value=None)
@@ -162,6 +169,8 @@ class SamplePID(Device):
 heater_spiral = SamplePID(human_name='Spiral Heater', pv_name='Temperature', pv_units='C deg',
                           kp=0.05, ki=0.02, kd=0.00,
                           pv_output=heater2_volt_output,
+                          pv_output_name='Voltage',
+                          pv_output_units='V',
                           ramper=ramper,
                           prefix='XF:08IDB-CT{FbPid:01}PID', name='heater_spiral')
 

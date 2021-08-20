@@ -40,13 +40,13 @@ class RamperIOC(PVGroup):
     tprog = pvproperty(
         value=[0.0, 60.0],
         doc='time array of the ramp program',
-        max_length=100
+        max_length=25
     )
 
     pvprog = pvproperty(
         value=[25.0, 25.0],
         doc='pv setpoint array of the ramp program',
-        max_length=100
+        max_length=25
     )
 
     dwell = pvproperty(
