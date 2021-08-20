@@ -5,7 +5,7 @@ from databroker.v0 import Broker
 import bluesky
 from distutils.version import LooseVersion
 from datetime import datetime
-import time
+
 from pathlib import Path
 from timeit import default_timer as timer
 import shlex, subprocess
@@ -47,7 +47,7 @@ def wait_for_connection_base(self, timeout=DEFAULT_CONNECTION_TIMEOUT):
     if timeout is DEFAULT_CONNECTION_TIMEOUT:
         timeout = self.connection_timeout
     # print(f'{print_now()}: waiting for {self.name} to connect within {timeout:.4f} s...')
-    start = time.time()
+    start = ttime.time()
     try:
         self._ensure_connected(self._read_pv, timeout=timeout)
         # print(f'{print_now()}: waited for {self.name} to connect for {time.time() - start:.4f} s.')
@@ -61,7 +61,7 @@ def wait_for_connection(self, timeout=DEFAULT_CONNECTION_TIMEOUT):
     if timeout is DEFAULT_CONNECTION_TIMEOUT:
         timeout = self.connection_timeout
     # print(f'{print_now()}: waiting for {self.name} to connect within {timeout:.4f} s...')
-    start = time.time()
+    start = ttime.time()
     self._ensure_connected(self._read_pv, self._write_pv, timeout=timeout)
     # print(f'{print_now()}: waited for {self.name} to connect for {time.time() - start:.4f} s.')
 
