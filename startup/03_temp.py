@@ -23,6 +23,7 @@ heater2_volt_output = EpicsSignal('XF:08IDB-CT{DIODE-HTR:2}VOLT:1-SP', name='vol
 
 class Ramper(Device):
     pv_sp = Cpt(EpicsSignal, 'pv_sp', name='pv_sp')
+    pv_sp_rate = Cpt(EpicsSignal, 'pv_sp_rate', name='pv_sp_rate') # pv setpoint change rate in pv units per minute
     go = Cpt(EpicsSignal, 'go', name='go')
     pv_pause = EpicsSignal('XF:08IDB-Ramping:pause', name='pv_pause')
 
@@ -33,7 +34,6 @@ class Ramper(Device):
     safety_timer = Cpt(EpicsSignal, 'safety_timer', name='safety_timer')
     pid_enable_name = Cpt(EpicsSignal, 'pid_enable_name', name='pid_enable_name')
     pid_output_name = Cpt(EpicsSignal, 'pid_output_name', name='pid_output_name')
-    # pid_output_name_ext = Cpt(EpicsSignal, 'pid_output_name_ext', name='pid_output_name_ext')
 
     def __init__(self, aux_pv_sp=None, *args, **kwargs):
         super().__init__(*args, **kwargs)

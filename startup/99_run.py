@@ -13,8 +13,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 #import matplotlib
 #matplotlib.use('Qt5Agg')
 
-import matplotlib.pyplot as plt
-plt.ion()
+
 
 
 app = QApplication(sys.argv)

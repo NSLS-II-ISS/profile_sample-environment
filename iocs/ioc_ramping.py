@@ -22,6 +22,11 @@ class RamperIOC(PVGroup):
         doc='pv setpoint',
     )
 
+    pv_sp_rate = pvproperty(
+        value=0.0,
+        doc='pv setpoint change rate',
+    )
+
     go = pvproperty(
         value=0,
         doc='flag indicating whether ramping is actually taking place'
@@ -94,7 +99,7 @@ class RamperIOC(PVGroup):
         value=0,
         doc='pv for output testing'
     )
-
+    _previous_elapsed_time = None
     time_start = None
     pid_enable = None
     pid_output = None
@@ -103,7 +108,9 @@ class RamperIOC(PVGroup):
     @pv_sp.startup
     async def pv_sp(self, instance, async_lib):
         """This is a startup hook which periodically updates the value."""
+        rate = 0
         while True:
+            await self.pv_sp_rate.write(rate)
             await async_lib.sleep(self.dwell.value)
             if self.go.value == 1:
                 if self.time_start is None:
@@ -118,12 +125,20 @@ class RamperIOC(PVGroup):
                         pv_sp = np.interp(dt, self.tprog.value, self.pvprog.value)
                     else:
                         pv_sp = self.pvprog.value[-1]
+
+                    if self._previous_elapsed_time is not None:
+                        rate = (pv_sp - self.pv_sp.value) / (dt - self._previous_elapsed_time) * 60
+
+                    self._previous_elapsed_time = dt
                     await instance.write(value=pv_sp)
+                else:
+                    rate = 0
 
             else:
                 self.time_start = None
                 await self.time_elapsed.write(0.0)
                 await self.time_paused.write(0.0)
+                rate = 0
 
 
 

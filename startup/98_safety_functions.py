@@ -6,8 +6,15 @@ def full_stop_for_sample_envs():
     print('DISABLING ALL SAMPLE ENVIRONMENTS')
     print()
     print()
-    disable_all_envs() # from /03_temp.py
-    kill_pid_ioc() # from /00_startup.py
+    try:
+        disable_all_envs() # from /03_temp.py
+    except:
+        print('COULD NOT DISABLE SAMPLE ENVIRONMENTS: IOCs NOT FOUND')
+    ttime.sleep(0.5)
+    try:
+        kill_pid_ioc() # from /00_startup.py
+    except:
+        print('COULD NOT KILL IOCs: PROCESS NOT FOUND')
 
 
 atexit.register(full_stop_for_sample_envs)
