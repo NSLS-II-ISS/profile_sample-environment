@@ -7,6 +7,11 @@ import time as ttime
 import numpy as np
 from ophyd import Component as Cpt, Device, EpicsSignal, Kind
 
+
+print('#####################################################################')
+print('###                    LAUNCHING PID LOOP IOC                     ###')
+print('#####################################################################')
+
 class RamperIOC(PVGroup):
     """
     An IOC for executing ramps of pv_setpoints

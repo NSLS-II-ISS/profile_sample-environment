@@ -6,15 +6,17 @@ import bluesky
 from distutils.version import LooseVersion
 from datetime import datetime
 
+import os
+import signal
 from pathlib import Path
 from timeit import default_timer as timer
 import shlex, subprocess
 
-
-
-
 import bluesky.plan_stubs as bps
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+plt.ion()
 
 from ophyd import (ProsilicaDetector, SingleTrigger, Component as Cpt, Device,
                    EpicsSignal, EpicsSignalRO, ImagePlugin, StatsPlugin, ROIPlugin,
@@ -27,8 +29,24 @@ arch_iss  = db_archiver.event_sources_by_name['arch_iss']
 # args = shlex.split('python /home/xf08id/.ipython/profile_sample-environment/iocs/ioc_ramping.py')
 # args = shlex.split('conda activate collection-2021-1.2; gnome-terminal -e "python /home/xf08id/.ipython/profile_sample-environment/iocs/ioc_ramping.py"')
 # args = shlex.split('"python /home/xf08id/.ipython/profile_sample-environment/iocs/ioc_ramping.py"')
-args = shlex.split('gnome-terminal -- python /home/xf08id/.ipython/profile_sample-environment/iocs/ioc_ramping.py')
-p = subprocess.Popen(args)
+ioc_args = shlex.split('gnome-terminal -- python /home/xf08id/.ipython/profile_sample-environment/iocs/ioc_ramping.py')
+ioc_process = subprocess.Popen(ioc_args)
+
+
+def get_pid(input_args):
+    input = ['pidof'] + input_args
+    return list(map(int, subprocess.check_output(input).split()))[0]
+
+pid_ioc = get_pid(ioc_args)
+
+
+# import atexit
+#
+# atexit.register(_bla)
+
+
+# _args = shlex.split('python /home/xf08id/.ipython/profile_sample-environment/iocs/ioc_ramping.py')
+# _ioc_process = subprocess.Popen(_args, stdout=subprocess.PIPE, shell=True)
 
 
 if bluesky.__version__ < LooseVersion('1.6'):
