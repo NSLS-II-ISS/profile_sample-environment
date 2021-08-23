@@ -37,16 +37,9 @@ def get_pid(input_args):
     input = ['pidof'] + input_args
     return list(map(int, subprocess.check_output(input).split()))[0]
 
-pid_ioc = get_pid(ioc_args)
-
-
-# import atexit
-#
-# atexit.register(_bla)
-
-
-# _args = shlex.split('python /home/xf08id/.ipython/profile_sample-environment/iocs/ioc_ramping.py')
-# _ioc_process = subprocess.Popen(_args, stdout=subprocess.PIPE, shell=True)
+def kill_pid_ioc():
+    pid_ioc = get_pid(ioc_args)
+    os.kill(pid_ioc, 9)
 
 
 if bluesky.__version__ < LooseVersion('1.6'):
