@@ -21,6 +21,7 @@ app = QApplication(sys.argv)
 
 
 xsample_gui = xsample.XsampleGui(mfcs=mfcs_cart,
+                                 total_flow_meter=total_flow_meter,
                                  rga_channels=rga_channels,
                                  rga_masses=rga_masses,
                                  ghs=ghs,
