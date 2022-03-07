@@ -94,9 +94,10 @@ class SamplePID(Device):
     KP = Cpt(EpicsSignal, '.KP')
     KI = Cpt(EpicsSignal, '.KI')
     KD = Cpt(EpicsSignal, '.KD')
+    I = Cpt(EpicsSignal, '.I')
 
     def __init__(self, human_name, pv_name, pv_units,
-                 kp=0.05, ki=0.02, kd=0.00,
+                 kp=0.025, ki=0.02, kd=0.00,
                  pv_output=None,
                  pv_output_name='',
                  pv_output_units='',
@@ -140,6 +141,7 @@ class SamplePID(Device):
         return (self.pv.get() - offset)
 
     def ramp_start(self, times_list, pv_sp_list):
+        self.I.put(0, wait=True)
         self.ramper.disable(pv_sp_value=None)
         self.ramper.tprog.put(times_list)
         self.ramper.pvprog.put(pv_sp_list)
