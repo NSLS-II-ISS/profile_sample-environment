@@ -15,6 +15,7 @@ import shlex, subprocess
 import bluesky.plan_stubs as bps
 import numpy as np
 import pandas as pd
+import time as ttime
 import matplotlib.pyplot as plt
 plt.ion()
 
@@ -51,8 +52,8 @@ else:
 ###############################################################################
 # TODO: remove this block once https://github.com/bluesky/ophyd/pull/959 is
 # merged/released.
-from ophyd.signal import EpicsSignalBase, EpicsSignal, DEFAULT_CONNECTION_TIMEOUT
-
+from ophyd.signal import EpicsSignalBase, EpicsSignal#, DEFAULT_CONNECTION_TIMEOUT
+DEFAULT_CONNECTION_TIMEOUT = 10
 def wait_for_connection_base(self, timeout=DEFAULT_CONNECTION_TIMEOUT):
     '''Wait for the underlying signals to initialize or connect'''
     if timeout is DEFAULT_CONNECTION_TIMEOUT:

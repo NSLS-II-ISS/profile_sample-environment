@@ -1,19 +1,25 @@
 import atexit
+import time as ttime
 
+
+print('this is ran!!')
 
 def full_stop_for_sample_envs():
+    import time as ttime
     print('IPYTHON SESSION CLOSED')
     print('DISABLING ALL SAMPLE ENVIRONMENTS')
     print()
     print()
     try:
         disable_all_envs() # from /03_temp.py
-    except:
+    except Exception as e:
+        print(e)
         print('COULD NOT DISABLE SAMPLE ENVIRONMENTS: IOCs NOT FOUND')
     ttime.sleep(0.5)
     try:
         kill_pid_ioc() # from /00_startup.py
-    except:
+    except Exception as e:
+        print(e)
         print('COULD NOT KILL IOCs: PROCESS NOT FOUND')
 
 
