@@ -95,6 +95,7 @@ class SamplePID(Device):
     KI = Cpt(EpicsSignal, '.KI')
     KD = Cpt(EpicsSignal, '.KD')
     I = Cpt(EpicsSignal, '.I')
+    pid_pv_outout_str = Cpt(EpicsSignal, ':out.OUTN')
 
     def __init__(self, human_name, pv_name, pv_units,
                  kp=0.025, ki=0.02, kd=0.00,
@@ -126,6 +127,7 @@ class SamplePID(Device):
             self.ramper.pid_output_name.put(self.pv_output.pvname)
 
     def enable(self):
+        self.pid_pv_outout_str.put(self.pv_output.pvname)
         self.enabled.put(1)
 
     def disable(self):
@@ -169,7 +171,16 @@ heater_spiral = SamplePID(human_name='Spiral Heater', pv_name='Temperature', pv_
                           ramper=ramper,
                           prefix='XF:08IDB-CT{FbPid:01}PID', name='heater_spiral')
 
-sample_envs_dict = {'Spiral Heater' : heater_spiral}
+heater_cartridge = SamplePID(human_name='Cartridge Heater', pv_name='Temperature', pv_units='C deg',
+                          kp=0.05, ki=0.02, kd=0.00,
+                          pv_output=heater1_curr_output,
+                          pv_output_name='Current',
+                          pv_output_units='mA',
+                          ramper=ramper,
+                          prefix='XF:08IDB-CT{FbPid:01}PID', name='heater_cartridge')
+
+sample_envs_dict = {'Spiral Heater' : heater_spiral,
+                    'Cartridge Heater': heater_cartridge}
 
 
 def disable_all_envs():
