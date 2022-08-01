@@ -14,10 +14,10 @@ ghs_ch2_bypass_2 = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:BYP0201}Cmd', name='ghs_ch
 ghs_ch2_bubbler2_1 = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:BII0201}Cmd', name='ghs_ch1_bypass_1')
 ghs_ch2_bubbler2_2 = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:BOI0201}Cmd', name='ghs_ch1_bypass_1')
 
-ghs_ch1_reactor = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:VSV0201}Cmd', name='ghs_ch1_reactor')
-ghs_ch1_exhaust = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:PSV0201}Cmd', name='ghs_ch1_reactor')
-ghs_ch2_reactor = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:VSV0101}Cmd', name='ghs_ch2_reactor')
-ghs_ch2_exhaust = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:PSV0101}Cmd', name='ghs_ch2_reactor')
+ghs_ch1_reactor = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:PSV0201}Cmd', name='ghs_ch1_reactor')
+ghs_ch1_exhaust = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:VSV0201}Cmd', name='ghs_ch1_reactor')
+ghs_ch2_reactor = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:PSV0101}Cmd', name='ghs_ch2_reactor')
+ghs_ch2_exhaust = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:VSV0101}Cmd', name='ghs_ch2_reactor')
 
 ghs_mnf1_upstream = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:IIV0109}Cmd', name='ghs_mnf1_upstream')
 ghs_mnf2_upstream = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:IIV0210}Cmd', name='ghs_mnf2_upstream')
