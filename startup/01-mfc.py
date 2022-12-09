@@ -20,6 +20,19 @@ total_flow_meter.rb.tolerance = 0.1
 
 
 
-mfcs_cart= [mfc_cart_1,
+class ShutoffValve(Device):
+    open = Cpt(EpicsSignal, 'Cmd:Opn-Cmd')
+    close = Cpt(EpicsSignal, 'Cmd:Cls-Cmd')
+    status =Cpt(EpicsSignal, 'Pos-Sts')
+
+valve_ch4 = ShutoffValve('XF:08IDB-VA{LDOCK-BV:1}', name = 'valve_CH4')
+valve_co = ShutoffValve('XF:08IDB-VA{SPEC:2-BV:1}', name = 'valve_CO')
+valve_h2 = ShutoffValve('XF:08IDB-VA{SCHM-BV:1}', name = 'valve_H2')
+
+
+gas_cart= [mfc_cart_1,
             mfc_cart_2,
-            mfc_cart_3,]
+            mfc_cart_3,
+            valve_ch4,
+            valve_co,
+            valve_h2 ]
