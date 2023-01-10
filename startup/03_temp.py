@@ -171,16 +171,16 @@ heater_spiral = SamplePID(human_name='Spiral Heater', pv_name='Temperature', pv_
                           ramper=ramper,
                           prefix='XF:08IDB-CT{FbPid:01}PID', name='heater_spiral')
 
-heater_cartridge = SamplePID(human_name='Cartridge Heater', pv_name='Temperature', pv_units='C deg',
-                          kp=0.05, ki=0.02, kd=0.00,
+heater_ir = SamplePID(human_name='Cartridge Heater', pv_name='Temperature', pv_units='C deg',
+                          kp=0.01, ki=0.00, kd=0.00,
                           pv_output=heater1_curr_output,
                           pv_output_name='Current',
                           pv_output_units='mA',
                           ramper=ramper,
-                          prefix='XF:08IDB-CT{FbPid:01}PID', name='heater_cartridge')
+                          prefix='XF:08IDB-CT{FbPid:02}PID', name='heater_cartridge')
 
 sample_envs_dict = {'Spiral Heater' : heater_spiral,
-                    'Cartridge Heater': heater_cartridge}
+                    'IR Heater': heater_ir}
 
 
 def disable_all_envs():

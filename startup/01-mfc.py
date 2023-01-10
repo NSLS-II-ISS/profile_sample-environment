@@ -25,13 +25,16 @@ class ShutoffValve(Device):
     close = Cpt(EpicsSignal, 'Cmd:Cls-Cmd')
     status =Cpt(EpicsSignal, 'Pos-Sts')
 
-valve_ch4 = ShutoffValve('XF:08IDB-VA{LDOCK-BV:1}', name = 'valve_CH4')
-valve_co = ShutoffValve('XF:08IDB-VA{SPEC:2-BV:1}', name = 'valve_CO')
-valve_h2 = ShutoffValve('XF:08IDB-VA{SCHM-BV:1}', name = 'valve_H2')
+# valve_ch4 = ShutoffValve('XF:08IDB-VA{LDOCK-BV:1}', name = 'valve_CH4')
+# valve_co = ShutoffValve('XF:08IDB-VA{SPEC:2-BV:1}', name = 'valve_CO')
+# valve_h2 = ShutoffValve('XF:08IDB-VA{SCHM-BV:1}', name = 'valve_H2')
+
+valve_ch4 = ShutoffValve('XF:08IDB-CT{GC:01-BV:2}', name = 'valve_CH4')
+valve_co = ShutoffValve('XF:08IDB-CT{GC:01-BV:3}', name = 'valve_CO')
+valve_h2 = ShutoffValve('XF:08IDB-CT{GC:01-BV:1}', name = 'valve_H2')
 
 
 gas_cart= {1: {'mfc': mfc_cart_1, 'vlv': valve_ch4},
             2:{'mfc': mfc_cart_2, 'vlv': valve_co},
             3:{'mfc': mfc_cart_3, 'vlv': valve_h2}
            }
-
