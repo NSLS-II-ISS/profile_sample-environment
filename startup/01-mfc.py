@@ -14,7 +14,7 @@ mfc_cart_2.rb.tolerance = 0.1
 mfc_cart_3  = MFC('XF:08IDB-CT{GC:1-MFC:3}Gas:Flow', name='mfc_cart_H2')
 mfc_cart_3.rb.tolerance = 0.1
 
-total_flow_meter = MFC('XF:08IDB-CT{GC:1-MFC:4}Gas:Flow', name='mfc_cart_H2')
+total_flow_meter = MFC('XF:08IDB-CT{GC:1-MFC:4}Gas:Flow', name='mfc_total_flow_meter')
 total_flow_meter.rb.tolerance = 0.1
 
 
