@@ -139,7 +139,7 @@ class SamplePID(Device):
             (not np.isclose(self.KD.get(), kd, 1e-3))):
             print(f'Warning: Sample PID loop for {self.human_name} was initialized with non-standard values !!!!')
 
-    def current_pv_reading(self, offset=5):
+    def current_pv_reading(self, offset=0.5):
         return (self.pv.get() - offset)
 
     def ramp_start(self, times_list, pv_sp_list):
