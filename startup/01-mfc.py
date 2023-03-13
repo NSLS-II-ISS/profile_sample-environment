@@ -39,16 +39,21 @@ gas_cart= {1: {'mfc': mfc_cart_1, 'vlv': valve_ch4},
             3:{'mfc': mfc_cart_3, 'vlv': valve_h2}
            }
 
-# class MobileGasSystem(Device):
-#
-#     reset_module1 = Cpt(EpicsSignal,'XF:08IDB-CT{DIODE-Box_B3:1}ModuleReconfig-Cmd')
-#     reset_module2 = Cpt(EpicsSignal, 'XF:08IDB-CT{DIODE-Box_B3:2}ModuleReconfig-Cmd')
-#     reset_module3 = Cpt(EpicsSignal, 'XF:08IDB-CT{DIODE-Box_B3:3}ModuleReconfig-Cmd')
-#     reset_module4 = Cpt(EpicsSignal, 'XF:08IDB-CT{DIODE-Box_B3:4}ModuleReconfig-Cmd')
-#
-#
-#     def reset(self):
-#         reset_module1.set(1)
-#         reset_module2.set(1)
-#         reset_module3.set(1)
-#         reset_module4.set(1)
+class MobileGasSystem(Device):
+
+    reset_module1 = Cpt(EpicsSignal,'XF:08IDB-CT{DIODE-Box_B3:1}ModuleReconfig-Cmd')
+    reset_module2 = Cpt(EpicsSignal, 'XF:08IDB-CT{DIODE-Box_B3:2}ModuleReconfig-Cmd')
+    reset_module3 = Cpt(EpicsSignal, 'XF:08IDB-CT{DIODE-Box_B3:3}ModuleReconfig-Cmd')
+    reset_module4 = Cpt(EpicsSignal, 'XF:08IDB-CT{DIODE-Box_B3:4}ModuleReconfig-Cmd')
+
+
+    def reset(self):
+        self.reset_module1.set(1)
+        self.reset_module2.set(1)
+        self.reset_module3.set(1)
+        self.reset_module4.set(1)
+
+
+mobile_gh_system =  MobileGasSystem(name='mghs')
+
+
