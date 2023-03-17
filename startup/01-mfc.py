@@ -56,4 +56,8 @@ class MobileGasSystem(Device):
 
 mobile_gh_system =  MobileGasSystem(name='mghs')
 
+arch_iss.pvs.update({mfc_cart_1.rb.name : mfc_cart_1.rb.pvname})
+arch_iss.pvs.update({mfc_cart_2.rb.name : mfc_cart_2.rb.pvname})
+arch_iss.pvs.update({mfc_cart_3.rb.name : mfc_cart_3.rb.pvname})
+arch_iss.pvs.update({total_flow_meter.rb.name : total_flow_meter.rb.pvname})
 

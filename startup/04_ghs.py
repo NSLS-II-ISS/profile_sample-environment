@@ -65,6 +65,7 @@ ghs_ch2_mfc6_sp = EpicsSignal('XF:08IDB-UT{Gas:1-MFC:14}F:Target-SP', name='ghs_
 ghs_ch2_mfc7_sp = EpicsSignal('XF:08IDB-UT{Gas:1-MFC:15}F:Target-SP', name='ghs_ch2_mfc7_sp')
 ghs_ch2_mfc8_sp = EpicsSignal('XF:08IDB-UT{Gas:1-MFC:16}F:Target-SP', name='ghs_ch2_mfc8_sp')
 
+
 ghs_ch1_mfc1_rb = EpicsSignal('XF:08IDB-UT{Gas:1-MFC:01}F-I', name='ghs_ch1_mfc1_rb')
 ghs_ch1_mfc2_rb = EpicsSignal('XF:08IDB-UT{Gas:1-MFC:02}F-I', name='ghs_ch1_mfc2_rb')
 ghs_ch1_mfc3_rb = EpicsSignal('XF:08IDB-UT{Gas:1-MFC:03}F-I', name='ghs_ch1_mfc3_rb')
@@ -215,3 +216,41 @@ ghs = {'manifolds':
                   },
             }
        }
+
+# ghs_channel =  { 1: [ghs_ch1_mfc1_rb,
+#                 ghs_ch1_mfc2_rb,
+#                 ghs_ch1_mfc3_rb,
+#                 ghs_ch1_mfc4_rb,
+#                 ghs_ch1_mfc5_rb,
+#                 ghs_ch1_mfc6_rb,],
+#                  2: [ghs_ch2_mfc1_rb,
+#                      ghs_ch2_mfc2_rb,
+#                      ghs_ch2_mfc3_rb,
+#                      ghs_ch2_mfc4_rb,
+#                      ghs_ch2_mfc5_rb,
+#                      ghs_ch2_mfc6_rb,
+#                      ghs_ch2_mfc7_rb,
+#                      ghs_ch2_mfc8_rb,]}
+#
+# for key in ghs_channel.keys():
+#     for mfc in ghs_channel[key]:
+#         arch_iss.pvs.update({mfc.name: mfc.pvname})
+
+arch_iss.pvs.update({ghs_ch1_mfc1_rb.name : ghs_ch1_mfc1_rb.pvname})
+arch_iss.pvs.update({ghs_ch1_mfc2_rb.name : ghs_ch1_mfc2_rb.pvname})
+arch_iss.pvs.update({ghs_ch1_mfc3_rb.name : ghs_ch1_mfc3_rb.pvname})
+arch_iss.pvs.update({ghs_ch1_mfc4_rb.name : ghs_ch1_mfc4_rb.pvname})
+arch_iss.pvs.update({ghs_ch1_mfc5_rb.name : ghs_ch1_mfc5_rb.pvname})
+arch_iss.pvs.update({ghs_ch1_mfc6_rb.name : ghs_ch1_mfc6_rb.pvname})
+arch_iss.pvs.update({ghs_ch1_mfc7_rb.name : ghs_ch1_mfc7_rb.pvname})
+arch_iss.pvs.update({ghs_ch1_mfc8_rb.name : ghs_ch1_mfc8_rb.pvname})
+#
+#
+arch_iss.pvs.update({ghs_ch2_mfc1_rb.name : ghs_ch2_mfc1_rb.pvname})
+arch_iss.pvs.update({ghs_ch2_mfc2_rb.name : ghs_ch2_mfc2_rb.pvname})
+arch_iss.pvs.update({ghs_ch2_mfc3_rb.name : ghs_ch2_mfc3_rb.pvname})
+arch_iss.pvs.update({ghs_ch2_mfc4_rb.name : ghs_ch2_mfc4_rb.pvname})
+arch_iss.pvs.update({ghs_ch2_mfc5_rb.name : ghs_ch2_mfc5_rb.pvname})
+arch_iss.pvs.update({ghs_ch2_mfc6_rb.name : ghs_ch2_mfc6_rb.pvname})
+arch_iss.pvs.update({ghs_ch2_mfc7_rb.name : ghs_ch2_mfc7_rb.pvname})
+arch_iss.pvs.update({ghs_ch2_mfc8_rb.name : ghs_ch2_mfc8_rb.pvname})
