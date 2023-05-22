@@ -19,6 +19,7 @@ ghs_ch1_exhaust = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:VSV0201}Cmd', name='ghs_ch1
 ghs_ch2_reactor = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:PSV0101}Cmd', name='ghs_ch2_reactor')
 ghs_ch2_exhaust = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:VSV0101}Cmd', name='ghs_ch2_reactor')
 
+
 ghs_mnf1_upstream = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:IIV0109}Cmd', name='ghs_mnf1_upstream')
 ghs_mnf2_upstream = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:IIV0210}Cmd', name='ghs_mnf2_upstream')
 ghs_mnf3_upstream = EpicsSignal('XF:08IDB-UT{Gas:1-Vlv:IIV0311}Cmd', name='ghs_mnf3_upstream')
@@ -254,3 +255,112 @@ arch_iss.pvs.update({ghs_ch2_mfc5_rb.name : ghs_ch2_mfc5_rb.pvname})
 arch_iss.pvs.update({ghs_ch2_mfc6_rb.name : ghs_ch2_mfc6_rb.pvname})
 arch_iss.pvs.update({ghs_ch2_mfc7_rb.name : ghs_ch2_mfc7_rb.pvname})
 arch_iss.pvs.update({ghs_ch2_mfc8_rb.name : ghs_ch2_mfc8_rb.pvname})
+
+def flow(gas, channel=0, flow_rate=0):
+    if channel == 1:
+        ch_name = 'ch1'
+    else:
+        ch_name = 'ch2'
+    gases = {'He': {'ch1': {
+                        'mfc':ghs_ch1_mfc1_sp,
+                        'selector': ghs_mnf1_gas_selector,
+                        'manifold':'1',
+                        'valves': [ghs_mnf1_upstream, ghs_mnf1_ch1_dnstream]},
+                    'ch2': {
+                        'mfc': ghs_ch2_mfc1_sp,
+                        'selector': ghs_mnf1_gas_selector,
+                        'manifold': '1',
+                        'valves': [ghs_mnf1_upstream, ghs_mnf1_ch2_dnstream]},
+                    'full_gas_name': 'Helium'},
+            'Ar': {'ch1': {
+                        'mfc':ghs_ch1_mfc1_sp,
+                        'selector': ghs_mnf1_gas_selector,
+                        'manifold': '1',
+                        'valves': [ghs_mnf1_upstream, ghs_mnf1_ch1_dnstream]},
+                    'ch2': {
+                        'mfc': ghs_ch2_mfc1_sp,
+                        'selector': ghs_mnf1_gas_selector,
+                        'manifold': '1',
+                        'valves': [ghs_mnf1_upstream, ghs_mnf1_ch2_dnstream]},
+                    'full_gas_name': 'Argon'},
+            'N2': {'ch1': {
+                       'mfc':ghs_ch1_mfc1_sp,
+                       'selector': ghs_mnf1_gas_selector,
+                        'manifold': '1',
+                        'valves': [ghs_mnf1_upstream, ghs_mnf1_ch1_dnstream]},
+                   'ch2': {
+                       'mfc': ghs_ch2_mfc1_sp,
+                       'selector': ghs_mnf1_gas_selector,
+                       'manifold': '1',
+                       'valves': [ghs_mnf1_upstream, ghs_mnf1_ch2_dnstream]},
+                    'full_gas_name': 'Nitrogen'},
+            'O2': {'ch1': {
+                        'mfc': ghs_ch1_mfc6_sp,
+                        'selector': None,
+                        'manifold': None,
+                        'valves': [ghs_mnf6_upstream, ghs_mnf6_ch1_dnstream]},
+                    'ch2': {
+                        'mfc': ghs_ch2_mfc6_sp,
+                        'selector': None,
+                        'manifold': None,
+                        'valves': [ghs_mnf6_upstream, ghs_mnf6_ch2_dnstream]},
+                    'full_gas_name': 'Oxygen'},
+            'CO2': {'ch1': {
+                        'mfc': ghs_ch1_mfc8_sp,
+                        'selector': None,
+                        'manifold': None,
+                        'valves': [ghs_mnf8_upstream, ghs_mnf8_ch1_dnstream]},
+                    'ch2': {
+                        'mfc': ghs_ch2_mfc8_sp,
+                        'selector': None,
+                        'manifold': None,
+                        'valves': [ghs_mnf8_upstream, ghs_mnf8_ch2_dnstream]},
+                    'full_gas_name': 'Carbon Dioxide'},
+            'CH4': {'ch1': {
+                        'mfc': mfc_cart_1,
+                        'selector': None,
+                        'manifold': None,
+                        'valves': [valve_ch4]},
+                    'ch2': {
+                        'mfc': mfc_cart_1,
+                        'selector': None,
+                        'manifold': None,
+                        'valves': [valve_ch4]},
+                    'full_gas_name': 'Methane'},
+            'CO': {'ch1': {
+                       'mfc': mfc_cart_2,
+                        'selector': None,
+                        'manifold': None,
+                        'valves': [valve_co]},
+                    'ch2': {
+                        'mfc': mfc_cart_2,
+                        'selector': None,
+                        'manifold': None,
+                        'valves': [valve_co]},
+                    'full_gas_name': 'Carbon Monoxide'},
+            'H2': {'ch1': {
+                        'mfc': mfc_cart_3,
+                        'selector': None,
+                        'manifold': None,
+                        'valves': [valve_h2]},
+                    'ch2': {
+                        'mfc': mfc_cart_3,
+                        'selector': None,
+                        'manifold': None,
+                        'valves': [valve_h2]},
+                    'full_gas_name': 'Hydrogen'}
+    }
+    #open or close valves
+    for valve in gases[gas][ch_name]['valves']:
+        if flow_rate > 0:
+             valve.set(1)
+        else:
+            valve.set(0)
+    if gases[gas][ch_name]['manifold']:
+        indx_mnf = gases[gas][ch_name]['manifold']
+        gas_command = ghs['manifolds'][indx_mnf]['gases'][gases[gas]['full_gas_name']]
+        # print(f'Gas command {gas_command}')
+        ghs['manifolds'][indx_mnf]['gas_selector'].set(gas_command)
+
+    gases[gas][ch_name]['mfc'].set(flow_rate)
+

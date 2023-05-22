@@ -29,6 +29,8 @@ class Ramper(Device):
 
     tprog = Cpt(EpicsSignal, 'tprog', name='tprog')
     pvprog = Cpt(EpicsSignal, 'pvprog', name='pvprog')
+
+    step = Cpt(EpicsSignal, 'step', name='step')
     dwell = Cpt(EpicsSignal, 'dwell', name='dwell')
     safety_thresh = Cpt(EpicsSignal, 'safety_thresh', name='safety_thresh')
     safety_timer = Cpt(EpicsSignal, 'safety_timer', name='safety_timer')
@@ -104,6 +106,7 @@ class SamplePID(Device):
                  pv_output_units='',
                  ramper=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.process_program = None
         self.human_name = human_name
         self.pv_name = pv_name
         self.pv_units = pv_units
@@ -126,6 +129,22 @@ class SamplePID(Device):
             self.ramper.pid_enable_name.put(self.enabled.pvname)
             self.ramper.pid_output_name.put(self.pv_output.pvname)
 
+            def _handle_gas_flow_program(value, old_value, **kwargs):
+                if value != old_value:
+                    self.handle_gas_flow_program(value, old_value, **kwargs)
+
+            self.ramper.step.subscribe(_handle_gas_flow_program)
+
+    def handle_gas_flow_program(self, value, old_value, **kwargs):
+        # print(f'step subscription: {value=}, {old_value=}, {kwargs=}')
+        if self.process_program is not None:
+            for i in range(1, 6): # number of gases is hardcoded to 5!
+                gas, channel, program = self.process_program[f'flowgas{i}'], self.process_program[f'flowchannel{i}'], self.process_program[f'flowprog{i}']
+                if (gas is not None) and (gas != -1) and (gas != '') and (gas != 'None'):
+                    flow_rate = program[value]
+                    print(f'Program step {value}: Setting {gas} flow to {flow_rate}')
+                    flow(gas, channel=channel, flow_rate=flow_rate)
+
     def enable(self):
         self.pid_pv_outout_str.put(self.pv_output.pvname)
         self.enabled.put(1)
@@ -142,11 +161,12 @@ class SamplePID(Device):
     def current_pv_reading(self, offset=0.5):
         return (self.pv.get() - offset)
 
-    def ramp_start(self, times_list, pv_sp_list):
+    def ramp_start(self, process_program):
+        self.process_program = process_program.copy()
         self.I.put(0, wait=True)
         self.ramper.disable(pv_sp_value=None)
-        self.ramper.tprog.put(times_list)
-        self.ramper.pvprog.put(pv_sp_list)
+        self.ramper.tprog.put(process_program['times'])
+        self.ramper.pvprog.put(process_program['setpoints'])
         self.enable()
         self.ramper.enable()
 
@@ -159,6 +179,9 @@ class SamplePID(Device):
     def ramp_stop(self):
         self.disable()
         self.ramper.disable()
+        self.process_program = None
+
+
 
 
 

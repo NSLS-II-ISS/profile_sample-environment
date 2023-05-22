@@ -55,9 +55,15 @@ class RamperIOC(PVGroup):
 
     pvprog = pvproperty(
         value=[25.0, 25.0],
-        doc='pv setpoint array of the ramp program',
+        doc='pv setpoint array of the pv (usually temperature) ramp program',
         max_length=25
     )
+
+    step  = pvproperty(
+        value=0,
+        doc="step of the program executed right now"
+        )
+
 
     dwell = pvproperty(
         value=0.05,
@@ -117,14 +123,18 @@ class RamperIOC(PVGroup):
                     self.time_start = ttime.time()
 
                 if self.pause.value == 0:
-
                     await self.time_elapsed.write(ttime.time() - self.time_start)
                     dt = self.time_elapsed.value - self.time_paused.value
 
                     if dt < np.max(self.tprog.value):
                         pv_sp = np.interp(dt, self.tprog.value, self.pvprog.value)
+                        _step_value = np.where(dt<np.array(self.tprog.value))[0][0]
                     else:
                         pv_sp = self.pvprog.value[-1]
+                        _step_value = len(self.tprog.value) - 1
+
+                    if self.step.value != _step_value:
+                        await self.step.write(_step_value)
 
                     if self._previous_elapsed_time is not None:
                         rate = (pv_sp - self.pv_sp.value) / (dt - self._previous_elapsed_time) * 60
@@ -193,12 +203,6 @@ class RamperIOC(PVGroup):
                 await instance.write(value=time_paused)
 
             await async_lib.sleep(self.dwell.value)
-
-
-
-
-
-
 
 
 if __name__ == '__main__':

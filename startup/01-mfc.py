@@ -4,6 +4,9 @@ class MFC(Device):
     rb = Cpt(EpicsSignal, '-I', write_pv='-SP')
     sp = Cpt(EpicsSignal,'-SP')
 
+    def set(self, flow_rate):
+        return self.sp.set(flow_rate)
+
 
 mfc_cart_1 = MFC('XF:08IDB-CT{GC:1-MFC:1}Gas:Flow', name='mfc_cart_CH4')
 mfc_cart_1.rb.tolerance = 0.1
@@ -24,6 +27,12 @@ class ShutoffValve(Device):
     open = Cpt(EpicsSignal, 'Cmd:Opn-Cmd')
     close = Cpt(EpicsSignal, 'Cmd:Cls-Cmd')
     status =Cpt(EpicsSignal, 'Pos-Sts')
+
+    def set(self,status):
+        if status == 0:
+            return self.close.set(1)
+        else:
+            return self.open.set(1)
 
 # valve_ch4 = ShutoffValve('XF:08IDB-VA{LDOCK-BV:1}', name = 'valve_CH4')
 # valve_co = ShutoffValve('XF:08IDB-VA{SPEC:2-BV:1}', name = 'valve_CO')
