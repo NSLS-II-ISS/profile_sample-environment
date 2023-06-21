@@ -22,17 +22,28 @@ total_flow_meter.rb.tolerance = 0.1
 
 
 
-
+from ophyd.sim import NullStatus
 class ShutoffValve(Device):
     open = Cpt(EpicsSignal, 'Cmd:Opn-Cmd')
     close = Cpt(EpicsSignal, 'Cmd:Cls-Cmd')
     status =Cpt(EpicsSignal, 'Pos-Sts')
 
-    def set(self,status):
-        if status == 0:
-            return self.close.set(1)
-        else:
-            return self.open.set(1)
+    def set(self, status):
+        st = None
+        for i in range(50):
+            print(f'Changing {self.name} valve status to {status} (attempt {i + 1})')
+            if self.status.get() != status:
+                if status == 0:
+                    st = self.close.set(1)
+                else:
+                    st = self.open.set(1)
+                st.wait()
+                ttime.sleep(0.25)
+            else:
+                break
+        if st is None:
+            st = NullStatus()
+        return st
 
 # valve_ch4 = ShutoffValve('XF:08IDB-VA{LDOCK-BV:1}', name = 'valve_CH4')
 # valve_co = ShutoffValve('XF:08IDB-VA{SPEC:2-BV:1}', name = 'valve_CO')
