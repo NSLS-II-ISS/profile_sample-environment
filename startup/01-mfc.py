@@ -7,6 +7,9 @@ class MFC(Device):
     def set(self, flow_rate):
         return self.sp.set(flow_rate)
 
+    def put(self, flow_rate):
+        self.sp.put(flow_rate)
+
 
 mfc_cart_1 = MFC('XF:08IDB-CT{GC:1-MFC:1}Gas:Flow', name='mfc_cart_CH4')
 mfc_cart_1.rb.tolerance = 0.1
@@ -16,6 +19,9 @@ mfc_cart_2.rb.tolerance = 0.1
 
 mfc_cart_3  = MFC('XF:08IDB-CT{GC:1-MFC:3}Gas:Flow', name='mfc_cart_H2')
 mfc_cart_3.rb.tolerance = 0.1
+
+mfc_cart_inert = MFC('XF:08IDB-CT{GC:1-MFC:6}Gas:Flow', name='mfc_cart_iner')
+mfc_cart_inert.rb.tolerance = 0.1
 
 total_flow_meter = MFC('XF:08IDB-CT{GC:1-MFC:4}Gas:Flow', name='mfc_total_flow_meter')
 total_flow_meter.rb.tolerance = 0.1
@@ -45,6 +51,9 @@ class ShutoffValve(Device):
             st = NullStatus()
         return st
 
+    def put(self, status):
+        self.set(status)
+
 # valve_ch4 = ShutoffValve('XF:08IDB-VA{LDOCK-BV:1}', name = 'valve_CH4')
 # valve_co = ShutoffValve('XF:08IDB-VA{SPEC:2-BV:1}', name = 'valve_CO')
 # valve_h2 = ShutoffValve('XF:08IDB-VA{SCHM-BV:1}', name = 'valve_H2')
@@ -55,9 +64,9 @@ valve_h2 = ShutoffValve('XF:08IDB-CT{GC:01-BV:1}', name = 'valve_H2')
 
 
 gas_cart= {1: {'mfc': mfc_cart_1, 'vlv': valve_ch4},
-            2:{'mfc': mfc_cart_2, 'vlv': valve_co},
-            3:{'mfc': mfc_cart_3, 'vlv': valve_h2}
-           }
+           2: {'mfc': mfc_cart_2, 'vlv': valve_co},
+           3: {'mfc': mfc_cart_3, 'vlv': valve_h2},
+           4: {'mfc': mfc_cart_inert, 'vlv': None}}
 
 class MobileGasSystem(Device):
 

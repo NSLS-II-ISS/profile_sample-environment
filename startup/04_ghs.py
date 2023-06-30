@@ -261,94 +261,106 @@ def flow(gas, channel=0, flow_rate=0):
         ch_name = 'ch1'
     else:
         ch_name = 'ch2'
-    gases = {'He': {'ch1': {
-                        'mfc':ghs_ch1_mfc1_sp,
-                        'selector': ghs_mnf1_gas_selector,
-                        'manifold':'1',
-                        'valves': [ghs_mnf1_upstream, ghs_mnf1_ch1_dnstream]},
-                    'ch2': {
-                        'mfc': ghs_ch2_mfc1_sp,
-                        'selector': ghs_mnf1_gas_selector,
-                        'manifold': '1',
-                        'valves': [ghs_mnf1_upstream, ghs_mnf1_ch2_dnstream]},
-                    'full_gas_name': 'Helium'},
+    gases = {
+        # 'He': {'ch1': {
+        #                 'mfc':ghs_ch1_mfc1_sp,
+        #                 'selector': ghs_mnf1_gas_selector,
+        #                 'manifold':'1',
+        #                 'valves': [ghs_mnf1_upstream, ghs_mnf1_ch1_dnstream, switch_manifold['ghs']]},
+        #             'ch2': {
+        #                 'mfc': ghs_ch2_mfc1_sp,
+        #                 'selector': ghs_mnf1_gas_selector,
+        #                 'manifold': '1',
+        #                 'valves': [ghs_mnf1_upstream, ghs_mnf1_ch2_dnstream, switch_manifold['ghs']]},
+        #             'full_gas_name': 'Helium'},
             'Ar': {'ch1': {
                         'mfc':ghs_ch1_mfc1_sp,
                         'selector': ghs_mnf1_gas_selector,
                         'manifold': '1',
-                        'valves': [ghs_mnf1_upstream, ghs_mnf1_ch1_dnstream]},
+                        'valves': [ghs_mnf1_upstream, ghs_mnf1_ch1_dnstream, switch_manifold['ghs']]},
                     'ch2': {
                         'mfc': ghs_ch2_mfc1_sp,
                         'selector': ghs_mnf1_gas_selector,
                         'manifold': '1',
-                        'valves': [ghs_mnf1_upstream, ghs_mnf1_ch2_dnstream]},
+                        'valves': [ghs_mnf1_upstream, ghs_mnf1_ch2_dnstream, switch_manifold['ghs']]},
                     'full_gas_name': 'Argon'},
             'N2': {'ch1': {
                        'mfc':ghs_ch1_mfc1_sp,
                        'selector': ghs_mnf1_gas_selector,
                         'manifold': '1',
-                        'valves': [ghs_mnf1_upstream, ghs_mnf1_ch1_dnstream]},
+                        'valves': [ghs_mnf1_upstream, ghs_mnf1_ch1_dnstream, switch_manifold['ghs']]},
                    'ch2': {
                        'mfc': ghs_ch2_mfc1_sp,
                        'selector': ghs_mnf1_gas_selector,
                        'manifold': '1',
-                       'valves': [ghs_mnf1_upstream, ghs_mnf1_ch2_dnstream]},
+                       'valves': [ghs_mnf1_upstream, ghs_mnf1_ch2_dnstream, switch_manifold['ghs']]},
                     'full_gas_name': 'Nitrogen'},
             'O2': {'ch1': {
                         'mfc': ghs_ch1_mfc6_sp,
                         'selector': None,
                         'manifold': None,
-                        'valves': [ghs_mnf6_upstream, ghs_mnf6_ch1_dnstream]},
+                        'valves': [ghs_mnf6_upstream, ghs_mnf6_ch1_dnstream, switch_manifold['ghs']]},
                     'ch2': {
                         'mfc': ghs_ch2_mfc6_sp,
                         'selector': None,
                         'manifold': None,
-                        'valves': [ghs_mnf6_upstream, ghs_mnf6_ch2_dnstream]},
+                        'valves': [ghs_mnf6_upstream, ghs_mnf6_ch2_dnstream, switch_manifold['ghs']]},
                     'full_gas_name': 'Oxygen'},
             'CO2': {'ch1': {
                         'mfc': ghs_ch1_mfc8_sp,
                         'selector': None,
                         'manifold': None,
-                        'valves': [ghs_mnf8_upstream, ghs_mnf8_ch1_dnstream]},
+                        'valves': [ghs_mnf8_upstream, ghs_mnf8_ch1_dnstream, switch_manifold['ghs']]},
                     'ch2': {
                         'mfc': ghs_ch2_mfc8_sp,
                         'selector': None,
                         'manifold': None,
-                        'valves': [ghs_mnf8_upstream, ghs_mnf8_ch2_dnstream]},
+                        'valves': [ghs_mnf8_upstream, ghs_mnf8_ch2_dnstream, switch_manifold['ghs']]},
                     'full_gas_name': 'Carbon Dioxide'},
             'CH4': {'ch1': {
                         'mfc': mfc_cart_1,
                         'selector': None,
                         'manifold': None,
-                        'valves': [valve_ch4]},
+                        'valves': [valve_ch4, switch_manifold['cart']]},
                     'ch2': {
                         'mfc': mfc_cart_1,
                         'selector': None,
                         'manifold': None,
-                        'valves': [valve_ch4]},
+                        'valves': [valve_ch4, switch_manifold['cart']]},
                     'full_gas_name': 'Methane'},
             'CO': {'ch1': {
                        'mfc': mfc_cart_2,
                         'selector': None,
                         'manifold': None,
-                        'valves': [valve_co]},
+                        'valves': [valve_co, switch_manifold['cart']]},
                     'ch2': {
                         'mfc': mfc_cart_2,
                         'selector': None,
                         'manifold': None,
-                        'valves': [valve_co]},
+                        'valves': [valve_co, switch_manifold['cart']]},
                     'full_gas_name': 'Carbon Monoxide'},
             'H2': {'ch1': {
                         'mfc': mfc_cart_3,
                         'selector': None,
                         'manifold': None,
-                        'valves': [valve_h2]},
+                        'valves': [valve_h2, switch_manifold['cart']]},
                     'ch2': {
                         'mfc': mfc_cart_3,
                         'selector': None,
                         'manifold': None,
-                        'valves': [valve_h2]},
-                    'full_gas_name': 'Hydrogen'}
+                        'valves': [valve_h2, switch_manifold['cart']]},
+                    'full_gas_name': 'Hydrogen'},
+            'He': {'ch1': {
+                        'mfc': mfc_cart_inert,
+                        'selector': None,
+                        'manifold': None,
+                        'valves': [switch_manifold['inert']]},
+                   'ch2': {
+                    'mfc': mfc_cart_inert,
+                    'selector': None,
+                    'manifold': None,
+                    'valves': [switch_manifold['inert']]},
+                'full_gas_name': 'Helium'},
     }
     #open or close valves
     for valve in gases[gas][ch_name]['valves']:

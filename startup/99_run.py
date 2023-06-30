@@ -26,6 +26,7 @@ xsample_gui = xsample.XsampleGui(gas_cart=gas_cart,
                                  rga_channels=rga_channels,
                                  rga_masses=rga_masses,
                                  ghs=ghs,
+                                 switch_manifold=switch_manifold,
                                  RE=RE,
                                  archiver = arch_iss,
                                  sample_envs_dict=sample_envs_dict)

@@ -1,14 +1,56 @@
 
 class SwitchValve(Device):
-    state = Cpt(EpicsSignal, -Sel)
+    state = Cpt(EpicsSignal, '-Sel')
 
-    def to_reactor():
-        state.set(1)
+    @property
+    def status(self):
+        return self.state.get()
 
-    def to_exhaust():
-        state.set(0)
+    @property
+    def direction(self):
+        if self.status == 1:
+            return 'reactor'
+        else:
+            return 'exhaust'
+
+    def set(self, new_status):
+        st = None
+        for i in range(50):
+            print(f'Changing {self.name} valve status to {new_status} (attempt {i + 1})')
+            if self.status != new_status:
+                st = self.state.set(new_status)
+                st.wait()
+                ttime.sleep(0.25)
+            else:
+                break
+        if st is None:
+            st = NullStatus()
+        return st
+
+    def set_to_reactor(self):
+        # self.state.set(1)
+        return self.set(1)
+
+    def set_to_exhaust(self):
+        # self.state.set(0)
+        return self.set(0)
+
+    def to_reactor(self):
+        self.state.put(1)
+
+    def to_exhaust(self):
+        self.state.put(0)
+
+    def put(self, value):
+        self.state.put(value)
 
 
-switch_valve_1 = SwitchValve('XF:08IDB-CT{DIODE-Box_B1:1}Out:0-', name='switch_valve_1')
-switch_valve_2 = SwitchValve('XF:08IDB-CT{DIODE-Box_B1:1}Out:1', name='switch_valve_1')
-switch_valve_3 = SwitchValve('XF:08IDB-CT{DIODE-Box_B1:1}Out:2', name='switch_valve_1')
+
+switch_valve_1 = SwitchValve('XF:08IDB-CT{DIODE-Box_B1:1}Out:0', name='switch_valve_1')
+switch_valve_2 = SwitchValve('XF:08IDB-CT{DIODE-Box_B1:1}Out:1', name='switch_valve_2')
+switch_valve_3 = SwitchValve('XF:08IDB-CT{DIODE-Box_B1:1}Out:2', name='switch_valve_3')
+
+
+switch_manifold = {'ghs': switch_valve_1,
+                   'cart': switch_valve_2,
+                   'inert': switch_valve_3,}
