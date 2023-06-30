@@ -3,7 +3,7 @@
 import numpy as np
 import time as ttime
 from ophyd import Component as Cpt, Device, EpicsSignal, Kind
-
+import copy
 
 temp1 = EpicsSignal('XF:08IDB-CT{DIODE-Box_B2:5}InCh0:Data-I', name='temp1')
 temp2 = EpicsSignal('XF:08IDB-CT{DIODE-Box_B2:5}InCh1:Data-I', name='temp2')
@@ -138,12 +138,12 @@ class SamplePID(Device):
     def handle_gas_flow_program(self, value, old_value, **kwargs):
         # print(f'step subscription: {value=}, {old_value=}, {kwargs=}')
         if self.process_program is not None:
-            print('Checkpoint 1')
+            # print('Checkpoint 1')
             for i in range(1, 6): # number of gases is hardcoded to 5!
-                print('Checkpoint 2')
+                # print('Checkpoint 2')
                 gas, channel, program = self.process_program[f'flowgas{i}'], self.process_program[f'flowchannel{i}'], self.process_program[f'flowprog{i}']
                 if (gas is not None) and (gas != -1) and (gas != '') and (gas != 'None'):
-                    print('Checkpoint 3')
+                    # print('Checkpoint 3')
                     flow_rate = program[value]
                     print(f'Program step {value}: Setting {gas} flow to {flow_rate}')
                     flow(gas, channel=channel, flow_rate=flow_rate)
@@ -165,8 +165,8 @@ class SamplePID(Device):
         return (self.pv.get() - offset)
 
     def ramp_start(self, process_program):
+        self.process_program = copy.deepcopy(process_program)
         self.ramper.step.put(0)
-        self.process_program = process_program.copy()
         self.I.put(0, wait=True)
         self.ramper.disable(pv_sp_value=None)
         self.ramper.tprog.put(process_program['times'])

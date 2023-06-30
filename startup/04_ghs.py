@@ -353,14 +353,18 @@ def flow(gas, channel=0, flow_rate=0):
     #open or close valves
     for valve in gases[gas][ch_name]['valves']:
         if flow_rate > 0:
-             valve.set(1)
+             # valve.set(1)
+             valve.put(1)
         else:
-            valve.set(0)
+            # valve.set(0)
+            valve.put(0)
     if gases[gas][ch_name]['manifold']:
         indx_mnf = gases[gas][ch_name]['manifold']
         gas_command = ghs['manifolds'][indx_mnf]['gases'][gases[gas]['full_gas_name']]
         # print(f'Gas command {gas_command}')
-        ghs['manifolds'][indx_mnf]['gas_selector'].set(gas_command)
+        # ghs['manifolds'][indx_mnf]['gas_selector'].set(gas_command)
+        ghs['manifolds'][indx_mnf]['gas_selector'].put(gas_command)
 
-    gases[gas][ch_name]['mfc'].set(flow_rate)
+    # gases[gas][ch_name]['mfc'].set(flow_rate)
+    gases[gas][ch_name]['mfc'].put(flow_rate)
 
