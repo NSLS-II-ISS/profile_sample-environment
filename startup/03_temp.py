@@ -136,17 +136,19 @@ class SamplePID(Device):
             self.ramper.step.subscribe(_handle_gas_flow_program)
 
     def handle_gas_flow_program(self, value, old_value, **kwargs):
-        # print(f'step subscription: {value=}, {old_value=}, {kwargs=}')
         if self.process_program is not None:
-            # print('Checkpoint 1')
+
+            flow_gas_dict = {}
+
             for i in range(1, 6): # number of gases is hardcoded to 5!
-                # print('Checkpoint 2')
                 gas, channel, program = self.process_program[f'flowgas{i}'], self.process_program[f'flowchannel{i}'], self.process_program[f'flowprog{i}']
                 if (gas is not None) and (gas != -1) and (gas != '') and (gas != 'None'):
-                    # print('Checkpoint 3')
                     flow_rate = program[value]
-                    print(f'Program step {value}: Setting {gas} flow to {flow_rate}')
+                    print_to_gui(f'Program step {value}: Setting {gas} flow to {flow_rate}', tag='Gas program', add_timestamp=True)
                     flow(gas, channel=channel, flow_rate=flow_rate)
+                    flow_gas_dict[gas] = flow_rate
+
+            # handle_switching_valve(flow_gas_dict)
 
     def enable(self):
         self.pid_pv_outout_str.put(self.pv_output.pvname)

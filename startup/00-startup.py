@@ -6,6 +6,7 @@ import bluesky
 from distutils.version import LooseVersion
 from datetime import datetime
 
+import sys
 import os
 import signal
 from pathlib import Path
@@ -22,6 +23,25 @@ plt.ion()
 from ophyd import (ProsilicaDetector, SingleTrigger, Component as Cpt, Device,
                    EpicsSignal, EpicsSignalRO, ImagePlugin, StatsPlugin, ROIPlugin,
                    DeviceStatus)
+
+def time_now_str():
+    return datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S.%f')
+
+# def print_to_gui(msg, tag='', add_timestamp=False, ntabs=0, stdout=sys.stdout):
+def print_to_gui(msg, tag='', add_timestamp=False, ntabs=0, stdout_alt=sys.stdout):
+    # print('THIS IS STDOUT', stdout, stdout is xlive_gui.emitstream_out)
+    try:
+        stdout = xlive_gui.emitstream_out
+    except NameError:
+        stdout = stdout_alt
+
+    msg = '\t'*ntabs + msg
+    if add_timestamp:
+        msg = f'({time_now_str()}) {msg}'
+    if tag:
+        msg = f'[{tag}] {msg}'
+
+    print(msg, file=stdout, flush=True)
 
 
 db_archiver = Broker.named('iss-archiver')

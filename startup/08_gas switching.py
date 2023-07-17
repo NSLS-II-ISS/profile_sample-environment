@@ -16,7 +16,7 @@ class SwitchValve(Device):
     def set(self, new_status):
         st = None
         for i in range(50):
-            print(f'Changing {self.name} valve status to {new_status} (attempt {i + 1})')
+            print_to_gui(f'Changing {self.name} valve status to {new_status} (attempt {i + 1})', tag='Gas program', add_timestamp=True)
             if self.status != new_status:
                 st = self.state.set(new_status)
                 st.wait()
@@ -42,15 +42,18 @@ class SwitchValve(Device):
         self.state.put(0)
 
     def put(self, value):
-        self.state.put(value)
+        self.set(value)
+        # print_to_gui(f'Changing {self.name} valve status to {value}', tag='Gas program',
+        #              add_timestamp=True)
+        # self.state.put(value)
 
 
 
-switch_valve_1 = SwitchValve('XF:08IDB-CT{DIODE-Box_B1:1}Out:0', name='switch_valve_1')
-switch_valve_2 = SwitchValve('XF:08IDB-CT{DIODE-Box_B1:1}Out:1', name='switch_valve_2')
-switch_valve_3 = SwitchValve('XF:08IDB-CT{DIODE-Box_B1:1}Out:2', name='switch_valve_3')
+switch_valve_ghs = SwitchValve('XF:08IDB-CT{DIODE-Box_B1:1}Out:0', name='switch_valve_ghs')
+switch_valve_cart = SwitchValve('XF:08IDB-CT{DIODE-Box_B1:1}Out:1', name='switch_valve_cart')
+switch_valve_inert = SwitchValve('XF:08IDB-CT{DIODE-Box_B1:1}Out:2', name='switch_valve_inert')
 
 
-switch_manifold = {'ghs': switch_valve_1,
-                   'cart': switch_valve_2,
-                   'inert': switch_valve_3,}
+switch_manifold = {'ghs': switch_valve_ghs,
+                   'cart': switch_valve_cart,
+                   'inert': switch_valve_inert, }

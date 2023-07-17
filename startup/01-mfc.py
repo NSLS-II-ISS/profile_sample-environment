@@ -37,7 +37,7 @@ class ShutoffValve(Device):
     def set(self, status):
         st = None
         for i in range(50):
-            print(f'Changing {self.name} valve status to {status} (attempt {i + 1})')
+            print_to_gui(f'Changing {self.name} valve status to {status} (attempt {i + 1})', tag='Gas program', add_timestamp=True)
             if self.status.get() != status:
                 if status == 0:
                     st = self.close.set(1)
