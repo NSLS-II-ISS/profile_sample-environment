@@ -138,23 +138,26 @@ class SamplePID(Device):
     def handle_gas_flow_program(self, value, old_value, **kwargs):
         if self.process_program is not None:
 
-            flow_gas_dict_for_switch_valve_manifold = {}
-            flow_gas_dict_for_ghs_channel_manifold = {}
+            switch_valve_dict = {'GHS Ch1': 'exhaust',
+                                 'GHS Ch2': 'exhaust',
+                                 'Gas cart': 'exhaust',
+                                 'Inert': 'exhaust'}
 
             for i in range(1, 6): # number of gases is hardcoded to 5!
-                gas, channel, program = self.process_program[f'flowgas{i}'], self.process_program[f'flowchannel{i}'], self.process_program[f'flowprog{i}']
+                gas, source, program, program_direction = (self.process_program[f'flowgas{i}'],
+                                                   self.process_program[f'flowsource{i}'],
+                                                   self.process_program[f'flowprog{i}'],
+                                                   self.process_program[f'flowdirection{i}'])
                 if (gas is not None) and (gas != -1) and (gas != '') and (gas != 'None'):
-                    flow_rate_reactor = program[value]
-                    flow_rate = flow_rate_reactor
-                    if flow_rate_reactor == 0:
-                        if any(program):
-                            flow_rate = 2
-                    print_to_gui(f'Program step {value}: Setting {gas} flow to {flow_rate_reactor}', tag='Gas program', add_timestamp=True)
-                    flow(gas, channel=channel, flow_rate=flow_rate)
-                    flow_gas_dict_for_switch_valve_manifold[gas] = flow_rate_reactor
-                    # flow_gas_dict_for_ghs_channel_manifold[gas] =
-
-            handle_switching_valve(flow_gas_dict_for_switch_valve_manifold)
+                    flow_rate = program[value]
+                    direction = program_direction[value]
+                    print_to_gui(f'Program step {value}: Setting {gas} flow to {flow_rate}', tag='Gas program', add_timestamp=True)
+                    flow(gas, source=source, flow_rate=flow_rate)
+                    if switch_valve_dict[source] == 'exhaust':
+                        if flow_rate > 0:
+                            switch_valve_dict[source] = direction
+            print(switch_valve_dict)
+            handle_switching_valve(switch_valve_dict)
 
     def enable(self):
         self.pid_pv_outout_str.put(self.pv_output.pvname)
