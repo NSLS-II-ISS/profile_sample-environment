@@ -141,8 +141,8 @@ class SamplePID(Device):
 
                 switch_valve_dict = {'GHS Ch1': 'exhaust',
                                      'GHS Ch2': 'exhaust',
-                                     'Gas cart': 'exhaust',
-                                     'Inert': 'exhaust'}
+                                     'Gas cart': 'exhaust'}#,
+                                     # 'Inert': 'exhaust'}
 
                 for i in range(1, 6): # number of gases is hardcoded to 5!
                     gas, source, program, program_direction = (self.process_program[f'flowgas{i}'],

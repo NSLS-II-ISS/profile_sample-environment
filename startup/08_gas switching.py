@@ -49,11 +49,12 @@ class SwitchValve(Device):
 
 
 
-switch_valve_ghs = SwitchValve('XF:08IDB-CT{DIODE-Box_B1:1}Out:0', name='switch_valve_ghs')
+switch_valve_ghs_ch1 = SwitchValve('XF:08IDB-CT{DIODE-Box_B1:1}Out:0', name='switch_valve_ghs_ch1')
+switch_valve_ghs_ch2 = SwitchValve('XF:08IDB-CT{DIODE-Box_B1:1}Out:2', name='switch_valve_ghs_ch2')
 switch_valve_cart = SwitchValve('XF:08IDB-CT{DIODE-Box_B1:1}Out:1', name='switch_valve_cart')
-switch_valve_inert = SwitchValve('XF:08IDB-CT{DIODE-Box_B1:1}Out:2', name='switch_valve_inert')
 
 
-switch_manifold = {'ghs': switch_valve_ghs,
-                   'cart': switch_valve_cart,
-                   'inert': switch_valve_inert, }
+
+switch_manifold = {'ghs_ch1': switch_valve_ghs_ch1,
+                   'ghs_ch2': switch_valve_ghs_ch2,
+                   'cart': switch_valve_cart}
