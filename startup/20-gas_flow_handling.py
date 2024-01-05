@@ -68,6 +68,19 @@ gases_flow_dict = {
                     'full_gas_name': 'Carbon Dioxide',
                     'group': 'ghs',
                     'group_switch_valve': switch_manifold['ghs']},
+            'C2H4': {'ch1': {
+                        'mfc': ghs_ch1_mfc3_sp,
+                        'selector': ghs_mnf3_gas_selector,
+                        'manifold': '3',
+                        'valves': [ghs_mnf3_upstream, ghs_mnf3_ch1_dnstream]},
+                    'ch2': {
+                        'mfc': ghs_ch2_mfc3_sp,
+                        'selector': ghs_mnf3_gas_selector,
+                        'manifold': '3',
+                        'valves': [ghs_mnf3_upstream, ghs_mnf3_ch2_dnstream]},
+                    'full_gas_name': 'Ethylene',
+                    'group': 'ghs',
+                    'group_switch_valve': switch_manifold['ghs']},
             'CH4': {'gas_cart': {
                         'mfc': mfc_cart_1,
                         'selector': None,

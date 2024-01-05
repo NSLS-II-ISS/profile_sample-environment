@@ -136,9 +136,7 @@ class SamplePID(Device):
             self.ramper.step.subscribe(_handle_gas_flow_program)
 
     def handle_gas_flow_program(self, value, old_value, **kwargs):
-        print(f'step program {value=}')
         if value != 0:
-            print('yey i am here')
             if self.process_program is not None:
 
                 switch_valve_dict = {'GHS Ch1': 'exhaust',
