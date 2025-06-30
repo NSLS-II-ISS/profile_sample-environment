@@ -90,3 +90,27 @@ arch_iss.pvs.update({mfc_cart_2.rb.name : mfc_cart_2.rb.pvname})
 arch_iss.pvs.update({mfc_cart_3.rb.name : mfc_cart_3.rb.pvname})
 arch_iss.pvs.update({total_flow_meter.rb.name : total_flow_meter.rb.pvname})
 
+
+
+class FlowConditionValves(Device):
+
+    valve1 = Cpt(EpicsSignal, 'Out:3-Sel', name='valve1')
+    valve2 = Cpt(EpicsSignal, 'Out:4-Sel', name='valve2')
+    valve3 = Cpt(EpicsSignal, 'Out:5-Sel', name='valve3')
+    valve4 = Cpt(EpicsSignal, 'Out:6-Sel', name='valve4')
+
+
+
+flow_condition_valves = FlowConditionValves('XF:08IDB-CT{DIODE-Box_B1:1}', name='flow_condition_valves')
+
+class PDU(Device):
+    module1 = Cpt(EpicsSignal, 'Sw:1-Sel', name='module1')
+    module2 = Cpt(EpicsSignal, 'Sw:2-Sel', name='module2')
+    module3 = Cpt(EpicsSignal, 'Sw:3-Sel', name='module3')
+    module4 = Cpt(EpicsSignal, 'Sw:4-Sel', name='module4')
+    module5 = Cpt(EpicsSignal, 'Sw:5-Sel', name='module5')
+    module6 = Cpt(EpicsSignal, 'Sw:6-Sel', name='module6')
+    module7 = Cpt(EpicsSignal, 'Sw:7-Sel', name='module7')
+    module8 = Cpt(EpicsSignal, 'Sw:8-Sel', name='module8')
+
+pdu3 = PDU('XF:08IDB-CT{PDU:3}', name='pdu3')
