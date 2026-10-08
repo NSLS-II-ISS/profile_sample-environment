@@ -82,7 +82,7 @@ class Ramper(Device):
 try:
     ramper = Ramper(aux_pv_sp=temp2_sp ,prefix='XF:08IDB-Ramping:', name='ramper')
     ramper.go.get() # to see if it is accessible
-except:
+except (TimeoutError, ConnectionError):
     print('ramper PV is not initialized')
     ramper = None
 
@@ -177,10 +177,13 @@ class SamplePID(Device):
         return (self.pv.get() - offset)
 
     def ramp_start(self, process_program):
+        from sample_environment.ramping import RampProgram
+
+        RampProgram(process_program["times"], process_program["setpoints"])
         self.process_program = copy.deepcopy(process_program)
+        self.ramper.disable(pv_sp_value=None)
         self.ramper.step.put(0)
         self.I.put(0, wait=True)
-        self.ramper.disable(pv_sp_value=None)
         self.ramper.tprog.put(process_program['times'])
         self.ramper.pvprog.put(process_program['setpoints'])
         self.enable()

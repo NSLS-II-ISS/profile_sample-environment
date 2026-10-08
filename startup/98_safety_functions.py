@@ -2,7 +2,7 @@ import atexit
 import time as ttime
 
 
-print('this is ran!!')
+
 
 
 
@@ -18,13 +18,6 @@ def full_stop_for_sample_envs():
         ramper_go.put(0, wait=True)
         ramper_pause.put(0, wait=True)
 
-    def kill_pid_ioc():
-        import shlex, subprocess
-        import os
-        ioc_args = shlex.split(
-            'gnome-terminal -- python /nsls2/data/iss/shared/config/bluesky/profile_sample-environment/iocs/ioc_ramping.py')
-        proc_id = list(map(int, subprocess.check_output(['pidof'] + ioc_args).split()))[0]
-        os.kill(proc_id, 9)
     print('IPYTHON SESSION CLOSED')
     print('DISABLING ALL SAMPLE ENVIRONMENTS')
     print()

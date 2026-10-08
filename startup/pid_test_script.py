@@ -8,10 +8,10 @@ T2 = 150
 time_window = 3*60
 
 
-from simple_pid import PID
-import h5py
 
 def pid_testing(max_time=60, p=0.01, i=0.01, d=0.001, setpoint=40, plotting=True):
+    from simple_pid import PID
+    import matplotlib.pyplot as plt
 
     time, temp_rb, volt_out = [], [], []
 
@@ -50,6 +50,7 @@ def pid_testing(max_time=60, p=0.01, i=0.01, d=0.001, setpoint=40, plotting=True
 
 
 def pid_scanning(sleep_time=5*60, exec_time=10*60, setpoint=300):
+    import h5py
     hf = h5py.File(r'/nsls2/xf08id/Sandbox/pid_temp_data/2020_12_29_data_high_temp.h5', 'w')
 
     p_grid = 10**np.linspace(-2.7, -1.9, 5)
@@ -76,6 +77,8 @@ def pid_scanning(sleep_time=5*60, exec_time=10*60, setpoint=300):
 
 
 def pid_ramping(t_ramp=3*60, T=400, max_time=5*60, p=0.01, i=0.01, d=0.001):
+    from simple_pid import PID
+    import matplotlib.pyplot as plt
     time, temp_rb, volt_out = [], [], []
     T_init =  temp2.value
     pid = PID(p, i, d, setpoint=T_init)
@@ -114,6 +117,8 @@ def pid_ramping(t_ramp=3*60, T=400, max_time=5*60, p=0.01, i=0.01, d=0.001):
 # hf =  h5py.File(r'/nsls2/xf08id/Sandbox/pid_temp_data/2020_12_23_data.h5', 'r')
 
 def plot_pid_scanning_data():
+    import h5py
+    import matplotlib.pyplot as plt
     hf = h5py.File('/nsls2/xf08id/Sandbox/pid_temp_data/2020_12_29_data.h5', 'r')
     P = []
     I = []

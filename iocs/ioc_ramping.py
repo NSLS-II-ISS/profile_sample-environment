@@ -1,16 +1,13 @@
 from textwrap import dedent
 
 from caproto import ChannelType
-from caproto._dbr import _LongStringChannelType
 from caproto.server import PVGroup, ioc_arg_parser, pvproperty, run
 import time as ttime
-import numpy as np
-from ophyd import Component as Cpt, Device, EpicsSignal, Kind
+from math import isfinite
 
+from sample_environment.ramping import RampClock, RampProgram
+from ophyd import EpicsSignal
 
-print('#####################################################################')
-print('###                    LAUNCHING PID LOOP IOC                     ###')
-print('#####################################################################')
 
 class RamperIOC(PVGroup):
     """
@@ -105,52 +102,76 @@ class RamperIOC(PVGroup):
         value=0,
         doc='pv for output testing'
     )
-    _previous_elapsed_time = None
-    time_start = None
     pid_enable = None
     pid_output = None
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._clock = RampClock()
+        self._program = RampProgram(self.tprog.value, self.pvprog.value)
+        self._previous_sample = None
+
+    @go.putter
+    async def go(self, instance, value):
+        if value not in (0, 1):
+            raise ValueError("go must be 0 or 1")
+        if value and not instance.value:
+            self._program = RampProgram(self.tprog.value, self.pvprog.value)
+        if not value:
+            self._clock = RampClock()
+            self._previous_sample = None
+        return value
+
+    @dwell.putter
+    async def dwell(self, instance, value):
+        if not isfinite(value) or value <= 0:
+            raise ValueError("dwell must be finite and positive")
+        return value
+
+    @tprog.putter
+    async def tprog(self, instance, value):
+        if self.go.value:
+            raise ValueError("Stop the ramp before editing its program")
+        return value
+
+    @pvprog.putter
+    async def pvprog(self, instance, value):
+        if self.go.value:
+            raise ValueError("Stop the ramp before editing its program")
+        return value
+
+    async def _update_ramp(self, now):
+        running, paused = bool(self.go.value), bool(self.pause.value)
+        self._clock.update(now, running, paused)
+        rate = 0.0
+        if running and not paused:
+            elapsed = self._clock.elapsed
+            value, step = self._program.sample(elapsed)
+            if self._previous_sample is not None:
+                previous_time, previous_value = self._previous_sample
+                interval = elapsed - previous_time
+                if interval > 0:
+                    rate = (value - previous_value) / interval * 60
+            self._previous_sample = elapsed, value
+            if self.step.value != step:
+                await self.step.write(step)
+            await self.pv_sp.write(value)
+        elif not running:
+            self._previous_sample = None
+        for signal, value in (
+            (self.time_elapsed, self._clock.elapsed + self._clock.paused),
+            (self.time_paused, self._clock.paused),
+            (self.pv_sp_rate, rate),
+        ):
+            if signal.value != value:
+                await signal.write(value)
 
     @pv_sp.startup
     async def pv_sp(self, instance, async_lib):
-        """This is a startup hook which periodically updates the value."""
-        rate = 0
+        """Use one monotonic clock for ramp and pause accounting."""
         while True:
-            await self.pv_sp_rate.write(rate)
+            await self._update_ramp(ttime.monotonic())
             await async_lib.sleep(self.dwell.value)
-            if self.go.value == 1:
-                if self.time_start is None:
-                    self.time_start = ttime.time()
-
-                if self.pause.value == 0:
-                    await self.time_elapsed.write(ttime.time() - self.time_start)
-                    dt = self.time_elapsed.value - self.time_paused.value
-
-                    if dt < np.max(self.tprog.value):
-                        pv_sp = np.interp(dt, self.tprog.value, self.pvprog.value)
-                        _step_value = np.where(dt<np.array(self.tprog.value))[0][0]
-                    else:
-                        pv_sp = self.pvprog.value[-1]
-                        _step_value = len(self.tprog.value) - 1
-
-                    if self.step.value != _step_value:
-                        await self.step.write(_step_value)
-
-                    if self._previous_elapsed_time is not None:
-                        rate = (pv_sp - self.pv_sp.value) / (dt - self._previous_elapsed_time) * 60
-
-                    self._previous_elapsed_time = dt
-                    await instance.write(value=pv_sp)
-                else:
-                    rate = 0
-
-            else:
-                self.time_start = None
-                await self.time_elapsed.write(0.0)
-                await self.time_paused.write(0.0)
-                rate = 0
-
-
 
     @pid_enable_name.startup
     async def pid_enable_name(self, instance, async_lib):
@@ -190,22 +211,8 @@ class RamperIOC(PVGroup):
             self.pid_enable.put(0)
 
 
-    @time_paused.startup
-    async def time_paused(self, instance, async_lib):
-        while True:
-            cur_time = ttime.time()
-            if self.pause.value == 1:
-                while True:
-                    if self.pause.value == 0:
-                        break
-                    await async_lib.sleep(self.dwell.value/2)
-                time_paused = self.time_paused.value + (ttime.time() - cur_time)
-                await instance.write(value=time_paused)
-
-            await async_lib.sleep(self.dwell.value)
-
-
 if __name__ == '__main__':
+    print('Launching sample environment ramping IOC')
     ioc_options, run_options = ioc_arg_parser(
         default_prefix='XF:08IDB-Ramping:',
         desc=dedent(RamperIOC.__doc__))
